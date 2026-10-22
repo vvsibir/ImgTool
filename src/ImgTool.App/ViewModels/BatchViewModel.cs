@@ -35,9 +35,19 @@ public sealed class BatchViewModel : BindableBase
     private int _resizePercent = 50;
     private bool _dontUpscale = true;
     private bool _cropEnabled;
+    private CropMode _cropMode = CropMode.AspectRatio;
+    private CropUnit _cropUnit = CropUnit.Pixels;
     private double _cropAspectWidth = 1;
     private double _cropAspectHeight = 1;
     private Anchor _cropAnchor = Anchor.Center;
+    private double _cropMarginLeft;
+    private double _cropMarginTop;
+    private double _cropMarginRight;
+    private double _cropMarginBottom;
+    private double _cropRectangleX;
+    private double _cropRectangleY;
+    private double _cropRectangleWidth;
+    private double _cropRectangleHeight;
     private int _rotationDegrees;
     private bool _flipHorizontal;
     private bool _flipVertical;
@@ -113,6 +123,19 @@ public sealed class BatchViewModel : BindableBase
         new("Заполнить с обрезкой", ResizeMode.Cover),
         new("Растянуть", ResizeMode.Stretch),
         new("Процент", ResizeMode.Percent)
+    ];
+
+    public IReadOnlyList<NamedValue<CropMode>> CropModes { get; } =
+    [
+        new("По пропорции", CropMode.AspectRatio),
+        new("Одинаковые поля", CropMode.Margins),
+        new("Прямоугольник", CropMode.Rectangle)
+    ];
+
+    public IReadOnlyList<NamedValue<CropUnit>> CropUnits { get; } =
+    [
+        new("Пиксели", CropUnit.Pixels),
+        new("Проценты", CropUnit.Percent)
     ];
 
     public IReadOnlyList<NamedValue<Anchor>> Anchors { get; } =
@@ -292,6 +315,36 @@ public sealed class BatchViewModel : BindableBase
         set => Set(ref _cropEnabled, value);
     }
 
+    public CropMode CropMode
+    {
+        get => _cropMode;
+        set
+        {
+            if (Set(ref _cropMode, value))
+            {
+                RaisePropertyChanged(
+                    nameof(IsAspectCrop),
+                    nameof(IsMarginsCrop),
+                    nameof(IsRectangleCrop),
+                    nameof(IsCropUnitVisible));
+            }
+        }
+    }
+
+    public bool IsAspectCrop => CropMode == CropMode.AspectRatio;
+
+    public bool IsMarginsCrop => CropMode == CropMode.Margins;
+
+    public bool IsRectangleCrop => CropMode == CropMode.Rectangle;
+
+    public bool IsCropUnitVisible => CropMode != CropMode.AspectRatio;
+
+    public CropUnit CropUnit
+    {
+        get => _cropUnit;
+        set => Set(ref _cropUnit, value);
+    }
+
     public double CropAspectWidth
     {
         get => _cropAspectWidth;
@@ -308,6 +361,54 @@ public sealed class BatchViewModel : BindableBase
     {
         get => _cropAnchor;
         set => Set(ref _cropAnchor, value);
+    }
+
+    public double CropMarginLeft
+    {
+        get => _cropMarginLeft;
+        set => Set(ref _cropMarginLeft, Math.Max(0, value));
+    }
+
+    public double CropMarginTop
+    {
+        get => _cropMarginTop;
+        set => Set(ref _cropMarginTop, Math.Max(0, value));
+    }
+
+    public double CropMarginRight
+    {
+        get => _cropMarginRight;
+        set => Set(ref _cropMarginRight, Math.Max(0, value));
+    }
+
+    public double CropMarginBottom
+    {
+        get => _cropMarginBottom;
+        set => Set(ref _cropMarginBottom, Math.Max(0, value));
+    }
+
+    public double CropRectangleX
+    {
+        get => _cropRectangleX;
+        set => Set(ref _cropRectangleX, Math.Max(0, value));
+    }
+
+    public double CropRectangleY
+    {
+        get => _cropRectangleY;
+        set => Set(ref _cropRectangleY, Math.Max(0, value));
+    }
+
+    public double CropRectangleWidth
+    {
+        get => _cropRectangleWidth;
+        set => Set(ref _cropRectangleWidth, Math.Max(0, value));
+    }
+
+    public double CropRectangleHeight
+    {
+        get => _cropRectangleHeight;
+        set => Set(ref _cropRectangleHeight, Math.Max(0, value));
     }
 
     public int RotationDegrees
@@ -624,9 +725,54 @@ public sealed class BatchViewModel : BindableBase
             return "Укажите шаблон имени файла.";
         }
 
-        if (CropEnabled && (CropAspectWidth <= 0 || CropAspectHeight <= 0))
+        if (CropEnabled)
         {
-            return "Пропорция обрезки должна быть положительной.";
+            switch (CropMode)
+            {
+                case CropMode.AspectRatio:
+                    if (CropAspectWidth <= 0 || CropAspectHeight <= 0)
+                    {
+                        return "Пропорция обрезки должна быть положительной.";
+                    }
+
+                    break;
+
+                case CropMode.Margins:
+                    if (CropMarginLeft < 0 || CropMarginTop < 0 ||
+                        CropMarginRight < 0 || CropMarginBottom < 0)
+                    {
+                        return "Поля обрезки не могут быть отрицательными.";
+                    }
+
+                    if (CropUnit == CropUnit.Percent &&
+                        (CropMarginLeft + CropMarginRight >= 100 ||
+                         CropMarginTop + CropMarginBottom >= 100))
+                    {
+                        return "Сумма полей обрезки должна быть меньше 100%.";
+                    }
+
+                    break;
+
+                case CropMode.Rectangle:
+                    if (CropRectangleX < 0 || CropRectangleY < 0)
+                    {
+                        return "Координаты обрезки не могут быть отрицательными.";
+                    }
+
+                    if (CropRectangleWidth <= 0 || CropRectangleHeight <= 0)
+                    {
+                        return "Укажите ширину и высоту области обрезки.";
+                    }
+
+                    if (CropUnit == CropUnit.Percent &&
+                        (CropRectangleX + CropRectangleWidth > 100 ||
+                         CropRectangleY + CropRectangleHeight > 100))
+                    {
+                        return "Область обрезки выходит за пределы 100%.";
+                    }
+
+                    break;
+            }
         }
 
         if (WatermarkEnabled && WatermarkKind == WatermarkKind.Logo &&
@@ -653,9 +799,19 @@ public sealed class BatchViewModel : BindableBase
         ResizePercent = ResizePercent,
         DontUpscale = DontUpscale,
         CropEnabled = CropEnabled,
+        CropMode = CropMode,
+        CropUnit = CropUnit,
         CropAspectWidth = CropAspectWidth,
         CropAspectHeight = CropAspectHeight,
         CropAnchor = CropAnchor,
+        CropMarginLeft = CropMarginLeft,
+        CropMarginTop = CropMarginTop,
+        CropMarginRight = CropMarginRight,
+        CropMarginBottom = CropMarginBottom,
+        CropRectangleX = CropRectangleX,
+        CropRectangleY = CropRectangleY,
+        CropRectangleWidth = CropRectangleWidth,
+        CropRectangleHeight = CropRectangleHeight,
         RotationDegrees = RotationDegrees,
         FlipHorizontal = FlipHorizontal,
         FlipVertical = FlipVertical,

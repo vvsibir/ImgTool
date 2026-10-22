@@ -151,6 +151,132 @@ public sealed class ImageProcessorTests
     }
 
     [Fact]
+    public void ProcessFile_MarginCrop_UsesPixels()
+    {
+        using var temp = new TempDirectory();
+        string source = Path.Combine(temp.Path, "source.png");
+        using (SKBitmap bitmap = CreateBitmap(200, 100, SKColors.Blue))
+        {
+            SkiaImage.Save(bitmap, source, ImageFormatKind.Png);
+        }
+
+        var options = new ProcessingOptions
+        {
+            CropEnabled = true,
+            CropMode = CropMode.Margins,
+            CropUnit = CropUnit.Pixels,
+            CropMarginLeft = 10,
+            CropMarginTop = 5,
+            CropMarginRight = 20,
+            CropMarginBottom = 15,
+            FileNamePattern = "{name}_margins"
+        };
+
+        ProcessingResult result = new ImageProcessor().ProcessFile(source, options);
+
+        Assert.True(result.Success, result.Error);
+        (int width, int height) = SkiaImage.ReadOrientedSize(result.OutputPath!);
+        Assert.Equal(170, width);
+        Assert.Equal(80, height);
+    }
+
+    [Fact]
+    public void ProcessFile_MarginCrop_UsesPercent()
+    {
+        using var temp = new TempDirectory();
+        string source = Path.Combine(temp.Path, "source.png");
+        using (SKBitmap bitmap = CreateBitmap(200, 100, SKColors.Blue))
+        {
+            SkiaImage.Save(bitmap, source, ImageFormatKind.Png);
+        }
+
+        var options = new ProcessingOptions
+        {
+            CropEnabled = true,
+            CropMode = CropMode.Margins,
+            CropUnit = CropUnit.Percent,
+            CropMarginLeft = 10,
+            CropMarginTop = 10,
+            CropMarginRight = 10,
+            CropMarginBottom = 10,
+            FileNamePattern = "{name}_margins_percent"
+        };
+
+        ProcessingResult result = new ImageProcessor().ProcessFile(source, options);
+
+        Assert.True(result.Success, result.Error);
+        Assert.Equal(new SKRectI(20, 10, 180, 90), ImageProcessor.CalculateCrop(200, 100, options));
+        (int width, int height) = SkiaImage.ReadOrientedSize(result.OutputPath!);
+        Assert.Equal(160, width);
+        Assert.Equal(80, height);
+    }
+
+    [Fact]
+    public void ProcessFile_RectangleCrop_UsesSameArea()
+    {
+        using var temp = new TempDirectory();
+        string source = Path.Combine(temp.Path, "source.png");
+        using (SKBitmap bitmap = CreateBitmap(200, 100, SKColors.Blue))
+        {
+            SkiaImage.Save(bitmap, source, ImageFormatKind.Png);
+        }
+
+        var options = new ProcessingOptions
+        {
+            CropEnabled = true,
+            CropMode = CropMode.Rectangle,
+            CropUnit = CropUnit.Pixels,
+            CropRectangleX = 30,
+            CropRectangleY = 20,
+            CropRectangleWidth = 100,
+            CropRectangleHeight = 60,
+            FileNamePattern = "{name}_rectangle"
+        };
+
+        ProcessingResult result = new ImageProcessor().ProcessFile(source, options);
+
+        Assert.True(result.Success, result.Error);
+        Assert.Equal(new SKRectI(30, 20, 130, 80), ImageProcessor.CalculateCrop(200, 100, options));
+        (int width, int height) = SkiaImage.ReadOrientedSize(result.OutputPath!);
+        Assert.Equal(100, width);
+        Assert.Equal(60, height);
+    }
+
+    [Fact]
+    public void CalculateCrop_RectangleOutsideImage_Throws()
+    {
+        var options = new ProcessingOptions
+        {
+            CropMode = CropMode.Rectangle,
+            CropUnit = CropUnit.Pixels,
+            CropRectangleX = 90,
+            CropRectangleY = 0,
+            CropRectangleWidth = 20,
+            CropRectangleHeight = 20
+        };
+
+        InvalidOperationException error = Assert.Throws<InvalidOperationException>(
+            () => ImageProcessor.CalculateCrop(100, 100, options));
+
+        Assert.Contains("выходит за пределы", error.Message);
+    }
+
+    [Fact]
+    public void CalculateCrop_MarginsInPercentCannotCoverWholeImage()
+    {
+        var options = new ProcessingOptions
+        {
+            CropMode = CropMode.Margins,
+            CropUnit = CropUnit.Percent,
+            CropMarginLeft = 50,
+            CropMarginRight = 50
+        };
+
+        Assert.Throws<InvalidOperationException>(
+            () => ImageProcessor.CalculateCrop(100, 100, options));
+    }
+
+    [Fact]
     public void ProcessFile_TextWatermark_Succeeds()
     {
         using var temp = new TempDirectory();

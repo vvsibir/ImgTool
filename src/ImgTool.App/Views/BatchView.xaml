@@ -129,29 +129,116 @@
                             <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,18,0,0" />
                             <TextBlock Text="Обрезка и поворот" Style="{StaticResource SectionTitle}" Margin="0,16,0,10" />
 
-                            <CheckBox Content="Обрезать под пропорцию" IsChecked="{Binding CropEnabled}" />
-                            <Grid Margin="0,10,0,0" IsEnabled="{Binding CropEnabled}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="10" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="Пропорция, ширина" Style="{StaticResource FieldLabel}" />
-                                    <TextBox Text="{Binding CropAspectWidth, UpdateSourceTrigger=PropertyChanged}" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="2">
-                                    <TextBlock Text="Пропорция, высота" Style="{StaticResource FieldLabel}" />
-                                    <TextBox Text="{Binding CropAspectHeight, UpdateSourceTrigger=PropertyChanged}" />
-                                </StackPanel>
-                            </Grid>
+                            <CheckBox Content="Обрезать кадры" IsChecked="{Binding CropEnabled}" />
+                            <StackPanel IsEnabled="{Binding CropEnabled}" Margin="0,10,0,0">
+                                <TextBlock Text="Способ обрезки" Style="{StaticResource FieldLabel}" />
+                                <ComboBox ItemsSource="{Binding CropModes}"
+                                          DisplayMemberPath="Name"
+                                          SelectedValuePath="Value"
+                                          SelectedValue="{Binding CropMode}" />
 
-                            <TextBlock Text="Привязка обрезки" Style="{StaticResource FieldLabel}" Margin="0,12,0,5" />
-                            <ComboBox ItemsSource="{Binding Anchors}"
-                                      DisplayMemberPath="Name"
-                                      SelectedValuePath="Value"
-                                      SelectedValue="{Binding CropAnchor}"
-                                      IsEnabled="{Binding CropEnabled}" />
+                                <StackPanel Margin="0,10,0,0"
+                                            Visibility="{Binding IsAspectCrop, Converter={StaticResource BoolToVis}}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Пропорция, ширина" Style="{StaticResource FieldLabel}" />
+                                            <TextBox Text="{Binding CropAspectWidth, UpdateSourceTrigger=PropertyChanged}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Пропорция, высота" Style="{StaticResource FieldLabel}" />
+                                            <TextBox Text="{Binding CropAspectHeight, UpdateSourceTrigger=PropertyChanged}" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <TextBlock Text="Привязка обрезки" Style="{StaticResource FieldLabel}" Margin="0,10,0,5" />
+                                    <ComboBox ItemsSource="{Binding Anchors}"
+                                              DisplayMemberPath="Name"
+                                              SelectedValuePath="Value"
+                                              SelectedValue="{Binding CropAnchor}" />
+                                </StackPanel>
+
+                                <StackPanel Margin="0,10,0,0"
+                                            Visibility="{Binding IsCropUnitVisible, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="Единицы измерения" Style="{StaticResource FieldLabel}" />
+                                    <ComboBox ItemsSource="{Binding CropUnits}"
+                                              DisplayMemberPath="Name"
+                                              SelectedValuePath="Value"
+                                              SelectedValue="{Binding CropUnit}" />
+                                </StackPanel>
+
+                                <StackPanel Margin="0,10,0,0"
+                                            Visibility="{Binding IsMarginsCrop, Converter={StaticResource BoolToVis}}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="10" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <StackPanel Grid.Row="0" Grid.Column="0">
+                                            <TextBlock Text="Слева" Style="{StaticResource FieldLabel}" />
+                                            <TextBox Text="{Binding CropMarginLeft, UpdateSourceTrigger=PropertyChanged}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="0" Grid.Column="2">
+                                            <TextBlock Text="Сверху" Style="{StaticResource FieldLabel}" />
+                                            <TextBox Text="{Binding CropMarginTop, UpdateSourceTrigger=PropertyChanged}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="2" Grid.Column="0">
+                                            <TextBlock Text="Справа" Style="{StaticResource FieldLabel}" />
+                                            <TextBox Text="{Binding CropMarginRight, UpdateSourceTrigger=PropertyChanged}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="2" Grid.Column="2">
+                                            <TextBlock Text="Снизу" Style="{StaticResource FieldLabel}" />
+                                            <TextBox Text="{Binding CropMarginBottom, UpdateSourceTrigger=PropertyChanged}" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,8,0,0"
+                                               Text="Одинаковые поля применяются ко всем кадрам. В процентах поля считаются от ширины и высоты каждого изображения." />
+                                </StackPanel>
+
+                                <StackPanel Margin="0,10,0,0"
+                                            Visibility="{Binding IsRectangleCrop, Converter={StaticResource BoolToVis}}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="10" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <StackPanel Grid.Row="0" Grid.Column="0">
+                                            <TextBlock Text="X" Style="{StaticResource FieldLabel}" />
+                                            <TextBox Text="{Binding CropRectangleX, UpdateSourceTrigger=PropertyChanged}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="0" Grid.Column="2">
+                                            <TextBlock Text="Y" Style="{StaticResource FieldLabel}" />
+                                            <TextBox Text="{Binding CropRectangleY, UpdateSourceTrigger=PropertyChanged}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="2" Grid.Column="0">
+                                            <TextBlock Text="Ширина" Style="{StaticResource FieldLabel}" />
+                                            <TextBox Text="{Binding CropRectangleWidth, UpdateSourceTrigger=PropertyChanged}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="2" Grid.Column="2">
+                                            <TextBlock Text="Высота" Style="{StaticResource FieldLabel}" />
+                                            <TextBox Text="{Binding CropRectangleHeight, UpdateSourceTrigger=PropertyChanged}" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,8,0,0"
+                                               Text="Отсчёт от левого верхнего угла. Обрезается один и тот же прямоугольник на каждом кадре." />
+                                </StackPanel>
+                            </StackPanel>
 
                             <TextBlock Text="Поворот" Style="{StaticResource FieldLabel}" Margin="0,12,0,5" />
                             <ComboBox ItemsSource="{Binding Rotations}"
@@ -258,7 +345,7 @@
                             <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,18,0,0" />
                             <TextBlock Text="Подсказка" Style="{StaticResource SectionTitle}" Margin="0,16,0,6" />
                             <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap"
-                                       Text="Поддерживаются JPG, PNG, BMP и WebP. Водяной знак рисуется после поворота и изменения размера. Для JPEG метаданные переносятся с исправленной ориентацией." />
+                                       Text="Поддерживаются JPG, PNG, BMP и WebP. Обрезка выполняется после поворота и отражения, но до изменения размера. Водяной знак рисуется после изменения размера. Для JPEG метаданные переносятся с исправленной ориентацией." />
                             <Border Height="16" Background="Transparent" />
                         </StackPanel>
                     </ScrollViewer>

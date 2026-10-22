@@ -62,11 +62,31 @@ public sealed class BatchSettings
 
     public bool CropEnabled { get; set; }
 
+    public CropMode CropMode { get; set; }
+
+    public CropUnit CropUnit { get; set; }
+
     public double CropAspectWidth { get; set; } = 1;
 
     public double CropAspectHeight { get; set; } = 1;
 
     public Anchor CropAnchor { get; set; } = Anchor.Center;
+
+    public double CropMarginLeft { get; set; }
+
+    public double CropMarginTop { get; set; }
+
+    public double CropMarginRight { get; set; }
+
+    public double CropMarginBottom { get; set; }
+
+    public double CropRectangleX { get; set; }
+
+    public double CropRectangleY { get; set; }
+
+    public double CropRectangleWidth { get; set; }
+
+    public double CropRectangleHeight { get; set; }
 
     public int RotationDegrees { get; set; }
 

@@ -27,6 +27,29 @@ public enum ImageFormatKind
     Bmp
 }
 
+/// <summary>Способ обрезки изображения.</summary>
+public enum CropMode
+{
+    /// <summary>Обрезка под заданную пропорцию с привязкой к стороне.</summary>
+    AspectRatio,
+
+    /// <summary>Обрезка одинаковыми полями со всех сторон.</summary>
+    Margins,
+
+    /// <summary>Обрезка фиксированным прямоугольником.</summary>
+    Rectangle
+}
+
+/// <summary>Единицы измерения области обрезки.</summary>
+public enum CropUnit
+{
+    /// <summary>Пиксели.</summary>
+    Pixels,
+
+    /// <summary>Проценты от ширины/высоты изображения.</summary>
+    Percent
+}
+
 /// <summary>Точка привязки при обрезке и позиция водяного знака.</summary>
 public enum Anchor
 {

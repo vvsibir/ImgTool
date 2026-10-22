@@ -38,7 +38,18 @@ public sealed class SettingsTests
                 ResizePercent = 33,
                 WatermarkEnabled = true,
                 WatermarkText = "Test",
-                RecursiveFolders = true
+                RecursiveFolders = true,
+                CropEnabled = true,
+                CropMode = CropMode.Margins,
+                CropUnit = CropUnit.Percent,
+                CropMarginLeft = 5,
+                CropMarginTop = 6,
+                CropMarginRight = 7,
+                CropMarginBottom = 8,
+                CropRectangleX = 11,
+                CropRectangleY = 12,
+                CropRectangleWidth = 13,
+                CropRectangleHeight = 14
             },
             Collage = new CollageSettings
             {
@@ -75,6 +86,17 @@ public sealed class SettingsTests
         Assert.Equal(expected.Batch.ResizePercent, actual.Batch.ResizePercent);
         Assert.Equal(expected.Batch.WatermarkText, actual.Batch.WatermarkText);
         Assert.True(actual.Batch.RecursiveFolders);
+        Assert.True(actual.Batch.CropEnabled);
+        Assert.Equal(expected.Batch.CropMode, actual.Batch.CropMode);
+        Assert.Equal(expected.Batch.CropUnit, actual.Batch.CropUnit);
+        Assert.Equal(expected.Batch.CropMarginLeft, actual.Batch.CropMarginLeft);
+        Assert.Equal(expected.Batch.CropMarginTop, actual.Batch.CropMarginTop);
+        Assert.Equal(expected.Batch.CropMarginRight, actual.Batch.CropMarginRight);
+        Assert.Equal(expected.Batch.CropMarginBottom, actual.Batch.CropMarginBottom);
+        Assert.Equal(expected.Batch.CropRectangleX, actual.Batch.CropRectangleX);
+        Assert.Equal(expected.Batch.CropRectangleY, actual.Batch.CropRectangleY);
+        Assert.Equal(expected.Batch.CropRectangleWidth, actual.Batch.CropRectangleWidth);
+        Assert.Equal(expected.Batch.CropRectangleHeight, actual.Batch.CropRectangleHeight);
         Assert.Equal(expected.Collage.Layout, actual.Collage.Layout);
         Assert.Null(actual.Collage.Width);
         Assert.Equal(expected.Collage.Padding, actual.Collage.Padding);
@@ -114,9 +136,19 @@ public sealed class SettingsTests
         original.Batch.ResizeMode = ResizeMode.Percent;
         original.Batch.ResizePercent = 33;
         original.Batch.CropEnabled = true;
+        original.Batch.CropMode = CropMode.Rectangle;
+        original.Batch.CropUnit = CropUnit.Percent;
         original.Batch.CropAspectWidth = 4;
         original.Batch.CropAspectHeight = 3;
         original.Batch.CropAnchor = Anchor.TopLeft;
+        original.Batch.CropMarginLeft = 1;
+        original.Batch.CropMarginTop = 2;
+        original.Batch.CropMarginRight = 3;
+        original.Batch.CropMarginBottom = 4;
+        original.Batch.CropRectangleX = 5;
+        original.Batch.CropRectangleY = 6;
+        original.Batch.CropRectangleWidth = 7;
+        original.Batch.CropRectangleHeight = 8;
         original.Batch.WatermarkEnabled = true;
         original.Batch.WatermarkKind = WatermarkKind.Logo;
         original.Batch.WatermarkLogoPath = @"C:\logo.png";
@@ -141,8 +173,18 @@ public sealed class SettingsTests
         Assert.Equal(original.Batch.Quality, restored.Batch.Quality);
         Assert.Equal(original.Batch.ResizeMode, restored.Batch.ResizeMode);
         Assert.Equal(original.Batch.ResizePercent, restored.Batch.ResizePercent);
+        Assert.Equal(original.Batch.CropMode, restored.Batch.CropMode);
+        Assert.Equal(original.Batch.CropUnit, restored.Batch.CropUnit);
         Assert.Equal(original.Batch.CropAspectWidth, restored.Batch.CropAspectWidth);
         Assert.Equal(original.Batch.CropAnchor, restored.Batch.CropAnchor);
+        Assert.Equal(original.Batch.CropMarginLeft, restored.Batch.CropMarginLeft);
+        Assert.Equal(original.Batch.CropMarginTop, restored.Batch.CropMarginTop);
+        Assert.Equal(original.Batch.CropMarginRight, restored.Batch.CropMarginRight);
+        Assert.Equal(original.Batch.CropMarginBottom, restored.Batch.CropMarginBottom);
+        Assert.Equal(original.Batch.CropRectangleX, restored.Batch.CropRectangleX);
+        Assert.Equal(original.Batch.CropRectangleY, restored.Batch.CropRectangleY);
+        Assert.Equal(original.Batch.CropRectangleWidth, restored.Batch.CropRectangleWidth);
+        Assert.Equal(original.Batch.CropRectangleHeight, restored.Batch.CropRectangleHeight);
         Assert.Equal(original.Batch.WatermarkKind, restored.Batch.WatermarkKind);
         Assert.Equal(original.Batch.WatermarkLogoPath, restored.Batch.WatermarkLogoPath);
         Assert.Equal(original.Collage.Layout, restored.Collage.Layout);

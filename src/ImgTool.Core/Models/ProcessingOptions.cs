@@ -36,6 +36,12 @@ public sealed class ProcessingOptions
 
     public bool CropEnabled { get; set; }
 
+    /// <summary>Способ обрезки: по пропорции, полями или прямоугольником.</summary>
+    public CropMode CropMode { get; set; }
+
+    /// <summary>Единицы полей и прямоугольника обрезки.</summary>
+    public CropUnit CropUnit { get; set; }
+
     /// <summary>Ширина пропорции обрезки (например, 16).</summary>
     public double CropAspectWidth { get; set; } = 1;
 
@@ -43,6 +49,30 @@ public sealed class ProcessingOptions
     public double CropAspectHeight { get; set; } = 1;
 
     public Anchor CropAnchor { get; set; } = Anchor.Center;
+
+    /// <summary>Левое поле обрезки в единицах <see cref="CropUnit"/>.</summary>
+    public double CropMarginLeft { get; set; }
+
+    /// <summary>Верхнее поле обрезки в единицах <see cref="CropUnit"/>.</summary>
+    public double CropMarginTop { get; set; }
+
+    /// <summary>Правое поле обрезки в единицах <see cref="CropUnit"/>.</summary>
+    public double CropMarginRight { get; set; }
+
+    /// <summary>Нижнее поле обрезки в единицах <see cref="CropUnit"/>.</summary>
+    public double CropMarginBottom { get; set; }
+
+    /// <summary>Левый край прямоугольника обрезки в единицах <see cref="CropUnit"/>.</summary>
+    public double CropRectangleX { get; set; }
+
+    /// <summary>Верхний край прямоугольника обрезки в единицах <see cref="CropUnit"/>.</summary>
+    public double CropRectangleY { get; set; }
+
+    /// <summary>Ширина прямоугольника обрезки в единицах <see cref="CropUnit"/>.</summary>
+    public double CropRectangleWidth { get; set; }
+
+    /// <summary>Высота прямоугольника обрезки в единицах <see cref="CropUnit"/>.</summary>
+    public double CropRectangleHeight { get; set; }
 
     /// <summary>Поворот: 0, 90, 180 или 270 градусов.</summary>
     public int RotationDegrees { get; set; }

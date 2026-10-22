@@ -42,9 +42,19 @@ public static class SettingsMapper
         viewModel.ResizePercent = settings.ResizePercent;
         viewModel.DontUpscale = settings.DontUpscale;
         viewModel.CropEnabled = settings.CropEnabled;
+        viewModel.CropMode = EnumOr(settings.CropMode, CropMode.AspectRatio);
+        viewModel.CropUnit = EnumOr(settings.CropUnit, CropUnit.Pixels);
         viewModel.CropAspectWidth = settings.CropAspectWidth;
         viewModel.CropAspectHeight = settings.CropAspectHeight;
         viewModel.CropAnchor = EnumOr(settings.CropAnchor, Anchor.Center);
+        viewModel.CropMarginLeft = settings.CropMarginLeft;
+        viewModel.CropMarginTop = settings.CropMarginTop;
+        viewModel.CropMarginRight = settings.CropMarginRight;
+        viewModel.CropMarginBottom = settings.CropMarginBottom;
+        viewModel.CropRectangleX = settings.CropRectangleX;
+        viewModel.CropRectangleY = settings.CropRectangleY;
+        viewModel.CropRectangleWidth = settings.CropRectangleWidth;
+        viewModel.CropRectangleHeight = settings.CropRectangleHeight;
         viewModel.RotationDegrees = settings.RotationDegrees is 0 or 90 or 180 or 270
             ? settings.RotationDegrees
             : 0;
@@ -114,9 +124,19 @@ public static class SettingsMapper
         ResizePercent = viewModel.ResizePercent,
         DontUpscale = viewModel.DontUpscale,
         CropEnabled = viewModel.CropEnabled,
+        CropMode = viewModel.CropMode,
+        CropUnit = viewModel.CropUnit,
         CropAspectWidth = viewModel.CropAspectWidth,
         CropAspectHeight = viewModel.CropAspectHeight,
         CropAnchor = viewModel.CropAnchor,
+        CropMarginLeft = viewModel.CropMarginLeft,
+        CropMarginTop = viewModel.CropMarginTop,
+        CropMarginRight = viewModel.CropMarginRight,
+        CropMarginBottom = viewModel.CropMarginBottom,
+        CropRectangleX = viewModel.CropRectangleX,
+        CropRectangleY = viewModel.CropRectangleY,
+        CropRectangleWidth = viewModel.CropRectangleWidth,
+        CropRectangleHeight = viewModel.CropRectangleHeight,
         RotationDegrees = viewModel.RotationDegrees,
         FlipHorizontal = viewModel.FlipHorizontal,
         FlipVertical = viewModel.FlipVertical,
