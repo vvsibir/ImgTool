@@ -1,0 +1,169 @@
+﻿<Window x:Class="ImgTool.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        xmlns:views="clr-namespace:ImgTool.App.Views"
+        mc:Ignorable="d"
+        x:Name="RootWindow"
+        Title="imgTool"
+        Width="1440" Height="920"
+        MinWidth="1160" MinHeight="760"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        ResizeMode="CanResize"
+        Background="{StaticResource WindowBrush}"
+        Foreground="{StaticResource TextBrush}"
+        FontFamily="{StaticResource AppFont}"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Display"
+        Closing="OnWindowClosing"
+        StateChanged="OnWindowStateChanged">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="0"
+                            ResizeBorderThickness="6"
+                            GlassFrameThickness="0"
+                            CornerRadius="0"
+                            UseAeroCaptionButtons="False" />
+    </shell:WindowChrome.WindowChrome>
+
+    <Border x:Name="WindowBorder"
+            Background="{StaticResource WindowBrush}"
+            BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="54" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Заголовок окна -->
+            <Grid Grid.Row="0"
+                  Background="#0C1019"
+                  MouseLeftButtonDown="OnTitleBarMouseDown">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="18,0,0,0">
+                    <Border Width="28" Height="28" CornerRadius="8">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#6C8CFF" Offset="0" />
+                                <GradientStop Color="#9E6CFF" Offset="1" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <TextBlock Text="iT" Foreground="White" FontWeight="Bold" FontSize="13"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="imgTool" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10,0,0,0" />
+                    <Border Width="1" Height="18" Background="{StaticResource BorderBrush}" Margin="14,0" />
+                    <TextBlock Text="{Binding SectionTitle}" Foreground="{StaticResource MutedBrush}"
+                               FontSize="12.5" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                    <Button x:Name="MinimizeButton" Content="—" Style="{StaticResource IconButton}"
+                            Click="OnMinimizeClick" ToolTip="Свернуть" />
+                    <Button x:Name="MaximizeButton" Content="□" Style="{StaticResource IconButton}"
+                            Click="OnMaximizeClick" ToolTip="Развернуть" Margin="2,0,0,0" />
+                    <Button x:Name="CloseButton" Content="✕" Style="{StaticResource IconButton}"
+                            Click="OnCloseClick" ToolTip="Закрыть" Margin="2,0,0,0" />
+                </StackPanel>
+            </Grid>
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="232" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Боковая навигация -->
+                <Border Grid.Column="0"
+                        Background="#0D1220"
+                        BorderBrush="{StaticResource BorderBrush}"
+                        BorderThickness="0,0,1,0">
+                    <Grid Margin="14,18,14,16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Text="РАЗДЕЛЫ" Style="{StaticResource MutedText}"
+                                   FontSize="10" FontWeight="SemiBold" Margin="10,0,0,8" />
+
+                        <StackPanel Grid.Row="1">
+                            <RadioButton Style="{StaticResource NavButton}"
+                                         GroupName="Sections"
+                                         IsChecked="{Binding IsBatchSection, Mode=OneWay}"
+                                         Command="{Binding SelectSectionCommand}"
+                                         CommandParameter="Batch">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="26" Height="26" CornerRadius="7" Background="#1A2438" Margin="0,0,10,0">
+                                        <TextBlock Text="▦" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock Text="Пакетная обработка" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </RadioButton>
+
+                            <RadioButton Style="{StaticResource NavButton}"
+                                         GroupName="Sections"
+                                         IsChecked="{Binding IsCollageSection, Mode=OneWay}"
+                                         Command="{Binding SelectSectionCommand}"
+                                         CommandParameter="Collage">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="26" Height="26" CornerRadius="7" Background="#1A2438" Margin="0,0,10,0">
+                                        <TextBlock Text="▤" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock Text="Коллаж" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </RadioButton>
+
+                            <RadioButton Style="{StaticResource NavButton}"
+                                         GroupName="Sections"
+                                         IsChecked="{Binding IsMetadataSection, Mode=OneWay}"
+                                         Command="{Binding SelectSectionCommand}"
+                                         CommandParameter="Metadata">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="26" Height="26" CornerRadius="7" Background="#1A2438" Margin="0,0,10,0">
+                                        <TextBlock Text="ⓘ" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock Text="Метаданные" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </RadioButton>
+                        </StackPanel>
+
+                        <Border Grid.Row="3" Background="{StaticResource SurfaceBrush}"
+                                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                                CornerRadius="10" Padding="12">
+                            <StackPanel>
+                                <TextBlock Text="Поддерживаемые форматы" Style="{StaticResource MutedText}"
+                                           FontSize="10.5" Margin="0,0,0,4" />
+                                <TextBlock Text="JPG · PNG · BMP · WebP" FontSize="12" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding VersionText}" Style="{StaticResource MutedText}"
+                                           FontSize="10.5" Margin="0,8,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Рабочая область -->
+                <Grid Grid.Column="1" Margin="22,18,22,18">
+                    <views:BatchView DataContext="{Binding Batch}"
+                                     Visibility="{Binding DataContext.IsBatchSection, RelativeSource={RelativeSource AncestorType={x:Type Window}}, Converter={StaticResource BoolToVis}}" />
+                    <views:CollageView DataContext="{Binding Collage}"
+                                       Visibility="{Binding DataContext.IsCollageSection, RelativeSource={RelativeSource AncestorType={x:Type Window}}, Converter={StaticResource BoolToVis}}" />
+                    <views:MetadataView DataContext="{Binding Metadata}"
+                                        Visibility="{Binding DataContext.IsMetadataSection, RelativeSource={RelativeSource AncestorType={x:Type Window}}, Converter={StaticResource BoolToVis}}" />
+                </Grid>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

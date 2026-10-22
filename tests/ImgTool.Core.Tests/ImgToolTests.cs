@@ -1,0 +1,465 @@
+﻿using ImgTool.Core.Models;
+using ImgTool.Core.Services;
+using SkiaSharp;
+
+namespace ImgTool.Core.Tests;
+
+public sealed class ColorParserTests
+{
+    [Theory]
+    [InlineData("#FFFFFF", 255, 255, 255)]
+    [InlineData("#112233", 0x11, 0x22, 0x33)]
+    [InlineData("#000000", 0, 0, 0)]
+    public void Parse_ReturnsExpectedColor(string hex, byte r, byte g, byte b)
+    {
+        SKColor color = ColorParser.Parse(hex);
+
+        Assert.Equal(r, color.Red);
+        Assert.Equal(g, color.Green);
+        Assert.Equal(b, color.Blue);
+    }
+
+    [Fact]
+    public void Parse_InvalidValue_ReturnsFallback()
+    {
+        SKColor fallback = new(1, 2, 3);
+
+        Assert.Equal(fallback, ColorParser.Parse("not-a-color", fallback));
+    }
+
+    [Fact]
+    public void WithOpacity_SetsAlpha()
+    {
+        SKColor color = ColorParser.WithOpacity("#FF0000", 0.5f);
+
+        Assert.Equal(255, color.Red);
+        Assert.InRange(color.Alpha, 127, 128);
+    }
+
+    [Fact]
+    public void ToHex_RoundTrips()
+    {
+        SKColor color = new(0x12, 0x34, 0x56);
+
+        Assert.Equal("#123456", ColorParser.ToHex(color));
+    }
+
+    [Fact]
+    public void Parse_SupportsAlphaChannel()
+    {
+        SKColor color = ColorParser.Parse("#80FF0000");
+
+        Assert.Equal(0x80, color.Alpha);
+        Assert.Equal(255, color.Red);
+    }
+
+    [Fact]
+    public void Parse_SixDigitHex_IsOpaque()
+    {
+        SKColor color = ColorParser.Parse("#12161F");
+
+        Assert.Equal(255, color.Alpha);
+    }
+}
+
+public sealed class ImageProcessorTests
+{
+    private static SKBitmap CreateBitmap(int width, int height, SKColor color)
+    {
+        var bitmap = new SKBitmap(new SKImageInfo(
+            width, height, SKColorType.Bgra8888, SKAlphaType.Premul));
+        bitmap.Erase(color);
+        return bitmap;
+    }
+
+    [Theory]
+    [InlineData(ImageFormatKind.Jpeg, ".jpg")]
+    [InlineData(ImageFormatKind.Png, ".png")]
+    [InlineData(ImageFormatKind.WebP, ".webp")]
+    [InlineData(ImageFormatKind.Bmp, ".bmp")]
+    public void SaveAndLoad_RoundTripsDimensions(ImageFormatKind format, string extension)
+    {
+        using var temp = new TempDirectory();
+        string path = Path.Combine(temp.Path, "test" + extension);
+
+        using (SKBitmap bitmap = CreateBitmap(64, 48, new SKColor(10, 20, 30)))
+        {
+            SkiaImage.Save(bitmap, path, format, 90);
+        }
+
+        Assert.True(File.Exists(path));
+        Assert.True(new FileInfo(path).Length > 0);
+
+        (int width, int height) = SkiaImage.ReadOrientedSize(path);
+        Assert.Equal(64, width);
+        Assert.Equal(48, height);
+    }
+
+    [Fact]
+    public void ProcessFile_ResizeFit_KeepsAspectRatio()
+    {
+        using var temp = new TempDirectory();
+        string source = Path.Combine(temp.Path, "source.png");
+        using (SKBitmap bitmap = CreateBitmap(200, 100, SKColors.Red))
+        {
+            SkiaImage.Save(bitmap, source, ImageFormatKind.Png);
+        }
+
+        var options = new ProcessingOptions
+        {
+            ResizeEnabled = true,
+            ResizeMode = ResizeMode.Fit,
+            ResizeWidth = 100,
+            ResizeHeight = 100,
+            FileNamePattern = "{name}_small"
+        };
+
+        ProcessingResult result = new ImageProcessor().ProcessFile(source, options);
+
+        Assert.True(result.Success, result.Error);
+        Assert.NotNull(result.OutputPath);
+        (int width, int height) = SkiaImage.ReadOrientedSize(result.OutputPath!);
+        Assert.Equal(100, width);
+        Assert.Equal(50, height);
+    }
+
+    [Fact]
+    public void ProcessFile_CropAndRotate_ProducesExpectedDimensions()
+    {
+        using var temp = new TempDirectory();
+        string source = Path.Combine(temp.Path, "source.png");
+        using (SKBitmap bitmap = CreateBitmap(200, 100, SKColors.Blue))
+        {
+            SkiaImage.Save(bitmap, source, ImageFormatKind.Png);
+        }
+
+        var options = new ProcessingOptions
+        {
+            CropEnabled = true,
+            CropAspectWidth = 1,
+            CropAspectHeight = 1,
+            RotationDegrees = 90,
+            FileNamePattern = "{name}_rotated"
+        };
+
+        ProcessingResult result = new ImageProcessor().ProcessFile(source, options);
+
+        Assert.True(result.Success, result.Error);
+        (int width, int height) = SkiaImage.ReadOrientedSize(result.OutputPath!);
+        Assert.Equal(100, width);
+        Assert.Equal(100, height);
+    }
+
+    [Fact]
+    public void ProcessFile_TextWatermark_Succeeds()
+    {
+        using var temp = new TempDirectory();
+        string source = Path.Combine(temp.Path, "source.jpg");
+        using (SKBitmap bitmap = CreateBitmap(300, 200, SKColors.DarkSlateGray))
+        {
+            SkiaImage.Save(bitmap, source, ImageFormatKind.Jpeg);
+        }
+
+        var options = new ProcessingOptions
+        {
+            FileNamePattern = "{name}_wm",
+            Watermark = new WatermarkOptions
+            {
+                Enabled = true,
+                Kind = WatermarkKind.Text,
+                Text = "imgTool",
+                FontSize = 32,
+                ColorHex = "#FFFFFF",
+                Opacity = 0.7f,
+                Position = Anchor.BottomRight,
+                Margin = 12,
+                Shadow = true
+            }
+        };
+
+        ProcessingResult result = new ImageProcessor().ProcessFile(source, options);
+
+        Assert.True(result.Success, result.Error);
+        Assert.True(File.Exists(result.OutputPath!));
+    }
+
+    [Fact]
+    public void CalculateCrop_CenterAndAnchors()
+    {
+        SKRectI center = ImageProcessor.CalculateCrop(400, 200, 1, 1, Anchor.Center);
+        Assert.Equal(new SKRectI(100, 0, 300, 200), center);
+
+        SKRectI left = ImageProcessor.CalculateCrop(400, 200, 1, 1, Anchor.Left);
+        Assert.Equal(0, left.Left);
+
+        SKRectI right = ImageProcessor.CalculateCrop(400, 200, 1, 1, Anchor.Right);
+        Assert.Equal(200, right.Left);
+    }
+}
+
+public sealed class CollageBuilderTests
+{
+    [Fact]
+    public void Build_CreatesImageWithExpectedSize()
+    {
+        using var temp = new TempDirectory();
+        string first = Path.Combine(temp.Path, "a.png");
+        string second = Path.Combine(temp.Path, "b.png");
+        string output = Path.Combine(temp.Path, "collage.jpg");
+
+        using (var bitmap = new SKBitmap(new SKImageInfo(100, 100, SKColorType.Bgra8888, SKAlphaType.Premul)))
+        {
+            bitmap.Erase(SKColors.Red);
+            SkiaImage.Save(bitmap, first, ImageFormatKind.Png);
+            bitmap.Erase(SKColors.Green);
+            SkiaImage.Save(bitmap, second, ImageFormatKind.Png);
+        }
+
+        var options = new CollageOptions
+        {
+            Columns = 2,
+            Width = 420,
+            CellAspect = 1,
+            Spacing = 10,
+            Padding = 10,
+            Fit = CollageFit.Cover,
+            Format = ImageFormatKind.Jpeg
+        };
+
+        CollageResult result = new CollageBuilder().Build([first, second], options, output);
+
+        Assert.True(File.Exists(output));
+        Assert.Equal(420, result.Width);
+        Assert.Equal(2, result.ImageCount);
+        (int width, int height) = SkiaImage.ReadOrientedSize(output);
+        Assert.Equal(420, width);
+        Assert.Equal(result.Height, height);
+    }
+
+    [Fact]
+    public void Build_WithoutWidth_UsesFirstImageWidthAndColumns()
+    {
+        using var temp = new TempDirectory();
+        string first = Path.Combine(temp.Path, "a.png");
+        string second = Path.Combine(temp.Path, "b.png");
+        string output = Path.Combine(temp.Path, "collage.png");
+
+        using (var bitmap = new SKBitmap(new SKImageInfo(100, 100, SKColorType.Bgra8888, SKAlphaType.Premul)))
+        {
+            bitmap.Erase(SKColors.Red);
+            SkiaImage.Save(bitmap, first, ImageFormatKind.Png);
+            bitmap.Erase(SKColors.Green);
+            SkiaImage.Save(bitmap, second, ImageFormatKind.Png);
+        }
+
+        var options = new CollageOptions
+        {
+            Columns = 2,
+            Width = null,
+            CellAspect = 1,
+            Spacing = 10,
+            Padding = 10,
+            Fit = CollageFit.Cover,
+            Format = ImageFormatKind.Png
+        };
+
+        CollageResult result = new CollageBuilder().Build([first, second], options, output);
+
+        // 10 + 100 + 10 + 100 + 10 = 230 px.
+        Assert.Equal(230, result.Width);
+        (int width, _) = SkiaImage.ReadOrientedSize(output);
+        Assert.Equal(230, width);
+    }
+
+    [Fact]
+    public void Build_TransparentBackground_WritesPngWithTransparentPadding()
+    {
+        using var temp = new TempDirectory();
+        string source = Path.Combine(temp.Path, "a.png");
+        string output = Path.Combine(temp.Path, "collage.png");
+
+        using (var bitmap = new SKBitmap(new SKImageInfo(100, 100, SKColorType.Bgra8888, SKAlphaType.Premul)))
+        {
+            bitmap.Erase(SKColors.Red);
+            SkiaImage.Save(bitmap, source, ImageFormatKind.Png);
+        }
+
+        var options = new CollageOptions
+        {
+            Columns = 1,
+            Width = 200,
+            CellAspect = 1,
+            Spacing = 0,
+            Padding = 10,
+            Fit = CollageFit.Cover,
+            Format = ImageFormatKind.Png,
+            TransparentBackground = true
+        };
+
+        new CollageBuilder().Build([source], options, output);
+
+        using SKBitmap decoded = SKBitmap.Decode(output);
+        Assert.Equal(SKColorType.Bgra8888, decoded.ColorType);
+        Assert.Equal(0, decoded.GetPixel(0, 0).Alpha);
+        Assert.Equal(0, decoded.GetPixel(199, 199).Alpha);
+        Assert.Equal(255, decoded.GetPixel(100, 100).Alpha);
+    }
+
+    [Fact]
+    public void Build_VerticalStrip_KeepsImagesAsIsAndUsesMaxWidth()
+    {
+        using var temp = new TempDirectory();
+        string first = Path.Combine(temp.Path, "a.png");
+        string second = Path.Combine(temp.Path, "b.png");
+        string output = Path.Combine(temp.Path, "strip.png");
+
+        using (var bitmap = new SKBitmap(new SKImageInfo(100, 80, SKColorType.Bgra8888, SKAlphaType.Premul)))
+        {
+            bitmap.Erase(SKColors.Red);
+            SkiaImage.Save(bitmap, first, ImageFormatKind.Png);
+        }
+
+        using (var bitmap = new SKBitmap(new SKImageInfo(60, 120, SKColorType.Bgra8888, SKAlphaType.Premul)))
+        {
+            bitmap.Erase(SKColors.Green);
+            SkiaImage.Save(bitmap, second, ImageFormatKind.Png);
+        }
+
+        var options = new CollageOptions
+        {
+            Layout = CollageLayout.VerticalStrip,
+            Spacing = 7,
+            Padding = 5,
+            BackgroundHex = "#000000",
+            Format = ImageFormatKind.Png
+        };
+
+        CollageResult result = new CollageBuilder().Build([first, second], options, output);
+
+        // Ширина: 5 + max(100, 60) + 5 = 110; высота: 5 + 80 + 7 + 120 + 5 = 217.
+        Assert.Equal(110, result.Width);
+        Assert.Equal(217, result.Height);
+
+        using SKBitmap decoded = SKBitmap.Decode(output);
+        Assert.Equal(110, decoded.Width);
+        Assert.Equal(217, decoded.Height);
+
+        // Кадры не растягиваются: справа от узкого кадра остаётся фон.
+        Assert.Equal(SKColors.Red, decoded.GetPixel(50, 40));
+        Assert.Equal(SKColors.Green, decoded.GetPixel(55, 150));
+        Assert.Equal(SKColors.Black, decoded.GetPixel(100, 150));
+    }
+
+    [Fact]
+    public void Build_HorizontalStrip_KeepsImagesAsIsAndUsesMaxHeight()
+    {
+        using var temp = new TempDirectory();
+        string first = Path.Combine(temp.Path, "a.png");
+        string second = Path.Combine(temp.Path, "b.png");
+        string output = Path.Combine(temp.Path, "strip.png");
+
+        using (var bitmap = new SKBitmap(new SKImageInfo(100, 80, SKColorType.Bgra8888, SKAlphaType.Premul)))
+        {
+            bitmap.Erase(SKColors.Red);
+            SkiaImage.Save(bitmap, first, ImageFormatKind.Png);
+        }
+
+        using (var bitmap = new SKBitmap(new SKImageInfo(60, 120, SKColorType.Bgra8888, SKAlphaType.Premul)))
+        {
+            bitmap.Erase(SKColors.Green);
+            SkiaImage.Save(bitmap, second, ImageFormatKind.Png);
+        }
+
+        var options = new CollageOptions
+        {
+            Layout = CollageLayout.HorizontalStrip,
+            Spacing = 7,
+            Padding = 5,
+            BackgroundHex = "#000000",
+            Format = ImageFormatKind.Png
+        };
+
+        CollageResult result = new CollageBuilder().Build([first, second], options, output);
+
+        // Ширина: 5 + 100 + 7 + 60 + 5 = 177; высота: 5 + max(80, 120) + 5 = 130.
+        Assert.Equal(177, result.Width);
+        Assert.Equal(130, result.Height);
+
+        using SKBitmap decoded = SKBitmap.Decode(output);
+        Assert.Equal(177, decoded.Width);
+        Assert.Equal(130, decoded.Height);
+
+        // Кадры не растягиваются: под первым кадром остаётся фон.
+        Assert.Equal(SKColors.Red, decoded.GetPixel(55, 65));
+        Assert.Equal(SKColors.Green, decoded.GetPixel(140, 65));
+        Assert.Equal(SKColors.Black, decoded.GetPixel(55, 120));
+    }
+}
+
+public sealed class MetadataServiceTests
+{
+    [Fact]
+    public void ReadSummary_ReportsDimensionsAndFormat()
+    {
+        using var temp = new TempDirectory();
+        string source = Path.Combine(temp.Path, "photo.jpg");
+        using (var bitmap = new SKBitmap(new SKImageInfo(120, 80, SKColorType.Bgra8888, SKAlphaType.Premul)))
+        {
+            bitmap.Erase(SKColors.Orange);
+            SkiaImage.Save(bitmap, source, ImageFormatKind.Jpeg);
+        }
+
+        ImageSummary summary = MetadataService.ReadSummary(source);
+
+        Assert.Equal(120, summary.Width);
+        Assert.Equal(80, summary.Height);
+        Assert.Equal("JPEG", summary.Format);
+        Assert.True(summary.FileSize > 0);
+    }
+
+    [Fact]
+    public void RenameByDate_UsesPattern()
+    {
+        using var temp = new TempDirectory();
+        string source = Path.Combine(temp.Path, "photo.png");
+        using (var bitmap = new SKBitmap(new SKImageInfo(20, 20, SKColorType.Bgra8888, SKAlphaType.Premul)))
+        {
+            bitmap.Erase(SKColors.White);
+            SkiaImage.Save(bitmap, source, ImageFormatKind.Png);
+        }
+
+        var results = MetadataService.RenameByDate([source], "{name}_renamed");
+
+        RenameResult result = Assert.Single(results);
+        Assert.True(result.Success, result.Error);
+        Assert.Equal("photo_renamed.png", Path.GetFileName(result.TargetPath));
+    }
+}
+
+internal sealed class TempDirectory : IDisposable
+{
+    public TempDirectory()
+    {
+        Path = System.IO.Path.Combine(
+            System.IO.Path.GetTempPath(),
+            "imgtool-tests-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path);
+    }
+
+    public string Path { get; }
+
+    public void Dispose()
+    {
+        try
+        {
+            if (Directory.Exists(Path))
+            {
+                Directory.Delete(Path, true);
+            }
+        }
+        catch
+        {
+            // Временная папка будет очищена системой.
+        }
+    }
+}
