@@ -81,11 +81,22 @@ public sealed class ProcessingOptions
 
     public bool FlipVertical { get; set; }
 
+    public ChromaKeyOptions ChromaKey { get; set; } = new();
+
     public WatermarkOptions Watermark { get; set; } = new();
 
     public ProcessingOptions Clone()
     {
         var clone = (ProcessingOptions)MemberwiseClone();
+        clone.ChromaKey = new ChromaKeyOptions
+        {
+            Enabled = ChromaKey.Enabled,
+            KeyColorHex = ChromaKey.KeyColorHex,
+            Tolerance = ChromaKey.Tolerance,
+            Softness = ChromaKey.Softness,
+            Despill = ChromaKey.Despill,
+            BackgroundHex = ChromaKey.BackgroundHex
+        };
         clone.Watermark = new WatermarkOptions
         {
             Enabled = Watermark.Enabled,

@@ -62,6 +62,92 @@ public sealed class ColorParserTests
     }
 }
 
+public sealed class ChromaKeyTests
+{
+    private static SKBitmap CreateBitmap(params SKColor[] colors)
+    {
+        var bitmap = new SKBitmap(new SKImageInfo(
+            colors.Length, 1, SKColorType.Bgra8888, SKAlphaType.Premul));
+        for (int i = 0; i < colors.Length; i++)
+        {
+            bitmap.SetPixel(i, 0, colors[i]);
+        }
+
+        return bitmap;
+    }
+
+    [Fact]
+    public void Apply_RemovesKeyColorAndKeepsOtherColors()
+    {
+        using SKBitmap bitmap = CreateBitmap(new SKColor(0, 255, 0), SKColors.Red);
+
+        ChromaKeyRemover.Apply(bitmap, new ChromaKeyOptions
+        {
+            Enabled = true,
+            KeyColorHex = "#00FF00",
+            Tolerance = 0,
+            Softness = 0,
+            Despill = false
+        });
+
+        Assert.Equal(0, bitmap.GetPixel(0, 0).Alpha);
+        Assert.Equal(255, bitmap.GetPixel(1, 0).Alpha);
+    }
+
+    [Fact]
+    public void Apply_RemovesDarkGreenWithinTolerance()
+    {
+        using SKBitmap bitmap = CreateBitmap(new SKColor(0, 0x88, 0));
+
+        ChromaKeyRemover.Apply(bitmap, new ChromaKeyOptions
+        {
+            Enabled = true,
+            KeyColorHex = "#00FF00",
+            Tolerance = 40,
+            Softness = 0,
+            Despill = false
+        });
+
+        Assert.Equal(0, bitmap.GetPixel(0, 0).Alpha);
+    }
+
+    [Fact]
+    public void Apply_SoftnessProducesPartialAlpha()
+    {
+        using SKBitmap bitmap = CreateBitmap(new SKColor(0, 0xCC, 0));
+
+        ChromaKeyRemover.Apply(bitmap, new ChromaKeyOptions
+        {
+            Enabled = true,
+            KeyColorHex = "#00FF00",
+            Tolerance = 5,
+            Softness = 10,
+            Despill = false
+        });
+
+        Assert.InRange(bitmap.GetPixel(0, 0).Alpha, 130, 160);
+    }
+
+    [Fact]
+    public void Apply_DespillReducesGreenFringe()
+    {
+        using SKBitmap bitmap = CreateBitmap(new SKColor(0x80, 0xC0, 0x80));
+
+        ChromaKeyRemover.Apply(bitmap, new ChromaKeyOptions
+        {
+            Enabled = true,
+            KeyColorHex = "#00FF00",
+            Tolerance = 35,
+            Softness = 10,
+            Despill = true
+        });
+
+        SKColor result = bitmap.GetPixel(0, 0);
+        Assert.InRange(result.Alpha, 100, 160);
+        Assert.True(result.Green < 175, $"Green channel is {result.Green}.");
+    }
+}
+
 public sealed class ImageProcessorTests
 {
     private static SKBitmap CreateBitmap(int width, int height, SKColor color)
@@ -274,6 +360,109 @@ public sealed class ImageProcessorTests
 
         Assert.Throws<InvalidOperationException>(
             () => ImageProcessor.CalculateCrop(100, 100, options));
+    }
+
+    [Fact]
+    public void ProcessFile_ChromaKey_PngKeepsTransparency()
+    {
+        using var temp = new TempDirectory();
+        string source = Path.Combine(temp.Path, "source.png");
+        using (SKBitmap bitmap = CreateBitmap(2, 1, SKColors.Lime))
+        {
+            bitmap.SetPixel(1, 0, SKColors.Red);
+            SkiaImage.Save(bitmap, source, ImageFormatKind.Png);
+        }
+
+        var options = new ProcessingOptions
+        {
+            Format = ImageFormatKind.Png,
+            FileNamePattern = "{name}_key",
+            ChromaKey = new ChromaKeyOptions
+            {
+                Enabled = true,
+                KeyColorHex = "#00FF00",
+                Tolerance = 0,
+                Softness = 0,
+                Despill = false
+            }
+        };
+
+        ProcessingResult result = new ImageProcessor().ProcessFile(source, options);
+
+        Assert.True(result.Success, result.Error);
+        using SKBitmap output = SkiaImage.LoadOriented(result.OutputPath!);
+        Assert.Equal(0, output.GetPixel(0, 0).Alpha);
+        Assert.Equal(255, output.GetPixel(1, 0).Alpha);
+    }
+
+    [Fact]
+    public void ProcessFile_ChromaKey_WebPKeepsTransparency()
+    {
+        using var temp = new TempDirectory();
+        string source = Path.Combine(temp.Path, "source.png");
+        using (SKBitmap bitmap = CreateBitmap(2, 1, SKColors.Lime))
+        {
+            bitmap.SetPixel(1, 0, SKColors.Red);
+            SkiaImage.Save(bitmap, source, ImageFormatKind.Png);
+        }
+
+        var options = new ProcessingOptions
+        {
+            Format = ImageFormatKind.WebP,
+            FileNamePattern = "{name}_key",
+            Quality = 100,
+            ChromaKey = new ChromaKeyOptions
+            {
+                Enabled = true,
+                KeyColorHex = "#00FF00",
+                Tolerance = 0,
+                Softness = 0,
+                Despill = false
+            }
+        };
+
+        ProcessingResult result = new ImageProcessor().ProcessFile(source, options);
+
+        Assert.True(result.Success, result.Error);
+        using SKBitmap output = SkiaImage.LoadOriented(result.OutputPath!);
+        Assert.Equal(0, output.GetPixel(0, 0).Alpha);
+        Assert.Equal(255, output.GetPixel(1, 0).Alpha);
+    }
+
+    [Fact]
+    public void ProcessFile_ChromaKey_BmpUsesSelectedBackground()
+    {
+        using var temp = new TempDirectory();
+        string source = Path.Combine(temp.Path, "source.png");
+        using (SKBitmap bitmap = CreateBitmap(2, 1, SKColors.Lime))
+        {
+            bitmap.SetPixel(1, 0, SKColors.Red);
+            SkiaImage.Save(bitmap, source, ImageFormatKind.Png);
+        }
+
+        var options = new ProcessingOptions
+        {
+            Format = ImageFormatKind.Bmp,
+            FileNamePattern = "{name}_key",
+            ChromaKey = new ChromaKeyOptions
+            {
+                Enabled = true,
+                KeyColorHex = "#00FF00",
+                Tolerance = 0,
+                Softness = 0,
+                Despill = false,
+                BackgroundHex = "#0000FF"
+            }
+        };
+
+        ProcessingResult result = new ImageProcessor().ProcessFile(source, options);
+
+        Assert.True(result.Success, result.Error);
+        using SKBitmap output = SkiaImage.LoadOriented(result.OutputPath!);
+        SKColor corner = output.GetPixel(0, 0);
+        Assert.True(corner.Blue > 240, $"Blue channel is {corner.Blue}.");
+        Assert.True(corner.Red < 16, $"Red channel is {corner.Red}.");
+        Assert.True(corner.Green < 16, $"Green channel is {corner.Green}.");
     }
 
     [Fact]

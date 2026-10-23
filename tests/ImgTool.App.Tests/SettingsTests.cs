@@ -49,7 +49,13 @@ public sealed class SettingsTests
                 CropRectangleX = 11,
                 CropRectangleY = 12,
                 CropRectangleWidth = 13,
-                CropRectangleHeight = 14
+                CropRectangleHeight = 14,
+                ChromaKeyEnabled = true,
+                ChromaKeyColor = "#00FF00",
+                ChromaKeyTolerance = 31,
+                ChromaKeySoftness = 7,
+                ChromaKeyDespill = false,
+                ChromaKeyBackground = "#112233"
             },
             Collage = new CollageSettings
             {
@@ -97,6 +103,12 @@ public sealed class SettingsTests
         Assert.Equal(expected.Batch.CropRectangleY, actual.Batch.CropRectangleY);
         Assert.Equal(expected.Batch.CropRectangleWidth, actual.Batch.CropRectangleWidth);
         Assert.Equal(expected.Batch.CropRectangleHeight, actual.Batch.CropRectangleHeight);
+        Assert.True(actual.Batch.ChromaKeyEnabled);
+        Assert.Equal(expected.Batch.ChromaKeyColor, actual.Batch.ChromaKeyColor);
+        Assert.Equal(expected.Batch.ChromaKeyTolerance, actual.Batch.ChromaKeyTolerance);
+        Assert.Equal(expected.Batch.ChromaKeySoftness, actual.Batch.ChromaKeySoftness);
+        Assert.False(actual.Batch.ChromaKeyDespill);
+        Assert.Equal(expected.Batch.ChromaKeyBackground, actual.Batch.ChromaKeyBackground);
         Assert.Equal(expected.Collage.Layout, actual.Collage.Layout);
         Assert.Null(actual.Collage.Width);
         Assert.Equal(expected.Collage.Padding, actual.Collage.Padding);
@@ -149,6 +161,12 @@ public sealed class SettingsTests
         original.Batch.CropRectangleY = 6;
         original.Batch.CropRectangleWidth = 7;
         original.Batch.CropRectangleHeight = 8;
+        original.Batch.ChromaKeyEnabled = true;
+        original.Batch.ChromaKeyColor = "#123456";
+        original.Batch.ChromaKeyTolerance = 44;
+        original.Batch.ChromaKeySoftness = 9;
+        original.Batch.ChromaKeyDespill = false;
+        original.Batch.ChromaKeyBackground = "#654321";
         original.Batch.WatermarkEnabled = true;
         original.Batch.WatermarkKind = WatermarkKind.Logo;
         original.Batch.WatermarkLogoPath = @"C:\logo.png";
@@ -185,6 +203,12 @@ public sealed class SettingsTests
         Assert.Equal(original.Batch.CropRectangleY, restored.Batch.CropRectangleY);
         Assert.Equal(original.Batch.CropRectangleWidth, restored.Batch.CropRectangleWidth);
         Assert.Equal(original.Batch.CropRectangleHeight, restored.Batch.CropRectangleHeight);
+        Assert.Equal(original.Batch.ChromaKeyEnabled, restored.Batch.ChromaKeyEnabled);
+        Assert.Equal(original.Batch.ChromaKeyColor, restored.Batch.ChromaKeyColor);
+        Assert.Equal(original.Batch.ChromaKeyTolerance, restored.Batch.ChromaKeyTolerance);
+        Assert.Equal(original.Batch.ChromaKeySoftness, restored.Batch.ChromaKeySoftness);
+        Assert.Equal(original.Batch.ChromaKeyDespill, restored.Batch.ChromaKeyDespill);
+        Assert.Equal(original.Batch.ChromaKeyBackground, restored.Batch.ChromaKeyBackground);
         Assert.Equal(original.Batch.WatermarkKind, restored.Batch.WatermarkKind);
         Assert.Equal(original.Batch.WatermarkLogoPath, restored.Batch.WatermarkLogoPath);
         Assert.Equal(original.Collage.Layout, restored.Collage.Layout);

@@ -60,6 +60,7 @@ public sealed class ImageProcessor
         {
             bitmap = ApplyRotationAndFlip(bitmap, options);
             bitmap = ApplyCrop(bitmap, options);
+            ApplyChromaKey(bitmap, options);
             bitmap = ApplyResize(bitmap, options);
 
             if (options.Watermark.Enabled)
@@ -68,6 +69,14 @@ public sealed class ImageProcessor
             }
 
             ImageFormatKind format = ImageFormatHelper.Resolve(options.Format, sourcePath);
+            if (options.ChromaKey.Enabled && format is ImageFormatKind.Jpeg or ImageFormatKind.Bmp)
+            {
+                SKColor background = ColorParser.Parse(
+                    options.ChromaKey.BackgroundHex,
+                    SKColors.White);
+                bitmap = Replace(bitmap, SkiaImage.Flatten(bitmap, background));
+            }
+
             string? outputPath = OutputPathBuilder.Build(
                 sourcePath,
                 options,
@@ -153,6 +162,16 @@ public sealed class ImageProcessor
         }
 
         return Replace(bitmap, SkiaImage.Crop(bitmap, crop));
+    }
+
+    private static void ApplyChromaKey(SKBitmap bitmap, ProcessingOptions options)
+    {
+        if (!options.ChromaKey.Enabled)
+        {
+            return;
+        }
+
+        ChromaKeyRemover.Apply(bitmap, options.ChromaKey);
     }
 
     private static SKBitmap ApplyResize(SKBitmap bitmap, ProcessingOptions options)

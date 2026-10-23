@@ -94,6 +94,18 @@ public sealed class BatchSettings
 
     public bool FlipVertical { get; set; }
 
+    public bool ChromaKeyEnabled { get; set; }
+
+    public string ChromaKeyColor { get; set; } = "#00FF00";
+
+    public double ChromaKeyTolerance { get; set; } = 35;
+
+    public double ChromaKeySoftness { get; set; } = 8;
+
+    public bool ChromaKeyDespill { get; set; } = true;
+
+    public string ChromaKeyBackground { get; set; } = "#FFFFFF";
+
     public bool WatermarkEnabled { get; set; }
 
     public WatermarkKind WatermarkKind { get; set; } = WatermarkKind.Text;

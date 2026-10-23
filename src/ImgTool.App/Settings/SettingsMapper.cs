@@ -60,6 +60,12 @@ public static class SettingsMapper
             : 0;
         viewModel.FlipHorizontal = settings.FlipHorizontal;
         viewModel.FlipVertical = settings.FlipVertical;
+        viewModel.ChromaKeyEnabled = settings.ChromaKeyEnabled;
+        viewModel.ChromaKeyColor = settings.ChromaKeyColor ?? "#00FF00";
+        viewModel.ChromaKeyTolerance = settings.ChromaKeyTolerance;
+        viewModel.ChromaKeySoftness = settings.ChromaKeySoftness;
+        viewModel.ChromaKeyDespill = settings.ChromaKeyDespill;
+        viewModel.ChromaKeyBackground = settings.ChromaKeyBackground ?? "#FFFFFF";
         viewModel.WatermarkEnabled = settings.WatermarkEnabled;
         viewModel.WatermarkKind = EnumOr(settings.WatermarkKind, WatermarkKind.Text);
         viewModel.WatermarkText = settings.WatermarkText ?? "imgTool";
@@ -140,6 +146,12 @@ public static class SettingsMapper
         RotationDegrees = viewModel.RotationDegrees,
         FlipHorizontal = viewModel.FlipHorizontal,
         FlipVertical = viewModel.FlipVertical,
+        ChromaKeyEnabled = viewModel.ChromaKeyEnabled,
+        ChromaKeyColor = viewModel.ChromaKeyColor,
+        ChromaKeyTolerance = viewModel.ChromaKeyTolerance,
+        ChromaKeySoftness = viewModel.ChromaKeySoftness,
+        ChromaKeyDespill = viewModel.ChromaKeyDespill,
+        ChromaKeyBackground = viewModel.ChromaKeyBackground,
         WatermarkEnabled = viewModel.WatermarkEnabled,
         WatermarkKind = viewModel.WatermarkKind,
         WatermarkText = viewModel.WatermarkText,

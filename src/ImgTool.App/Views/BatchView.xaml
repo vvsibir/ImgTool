@@ -252,6 +252,85 @@
                             </StackPanel>
 
                             <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,18,0,0" />
+                            <TextBlock Text="Хромакей" Style="{StaticResource SectionTitle}" Margin="0,16,0,10" />
+
+                            <CheckBox Content="Удалить фон по цвету" IsChecked="{Binding ChromaKeyEnabled}" />
+                            <StackPanel IsEnabled="{Binding ChromaKeyEnabled}" Margin="0,10,0,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="46" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Цвет ключа (HEX)" Style="{StaticResource FieldLabel}" />
+                                        <TextBox Text="{Binding ChromaKeyColor, UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
+                                    <Border Grid.Column="2"
+                                            Height="36"
+                                            Margin="0,20,0,0"
+                                            CornerRadius="8"
+                                            BorderBrush="{StaticResource BorderBrush}"
+                                            BorderThickness="1"
+                                            Background="{Binding ChromaKeyColor}" />
+                                </Grid>
+
+                                <Grid Margin="0,12,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Допуск" Style="{StaticResource FieldLabel}" />
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding ChromaKeyTolerance, StringFormat={}{0:0}%}"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               FontSize="12" />
+                                </Grid>
+                                <Slider Minimum="0" Maximum="100"
+                                        Value="{Binding ChromaKeyTolerance, UpdateSourceTrigger=PropertyChanged}" />
+
+                                <Grid Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Смягчение" Style="{StaticResource FieldLabel}" />
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding ChromaKeySoftness, StringFormat={}{0:0}%}"
+                                               Foreground="{StaticResource AccentBrush}"
+                                               FontSize="12" />
+                                </Grid>
+                                <Slider Minimum="0" Maximum="100"
+                                        Value="{Binding ChromaKeySoftness, UpdateSourceTrigger=PropertyChanged}" />
+
+                                <CheckBox Content="Убирать цветной ореол"
+                                          IsChecked="{Binding ChromaKeyDespill}"
+                                          Margin="0,8,0,0" />
+
+                                <Grid Margin="0,12,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="46" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Фон для JPEG/BMP (HEX)" Style="{StaticResource FieldLabel}" />
+                                        <TextBox Text="{Binding ChromaKeyBackground, UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
+                                    <Border Grid.Column="2"
+                                            Height="36"
+                                            Margin="0,20,0,0"
+                                            CornerRadius="8"
+                                            BorderBrush="{StaticResource BorderBrush}"
+                                            BorderThickness="1"
+                                            Background="{Binding ChromaKeyBackground}" />
+                                </Grid>
+
+                                <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,8,0,0"
+                                           Text="PNG и WebP сохраняют прозрачность, JPEG и BMP — на выбранном фоне. Если фон удаляется не полностью, увеличьте допуск; если удаляются лишние области — уменьшите." />
+                            </StackPanel>
+
+                            <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,18,0,0" />
                             <TextBlock Text="Водяной знак" Style="{StaticResource SectionTitle}" Margin="0,16,0,10" />
 
                             <CheckBox Content="Добавить водяной знак" IsChecked="{Binding WatermarkEnabled}" />
@@ -345,7 +424,7 @@
                             <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,18,0,0" />
                             <TextBlock Text="Подсказка" Style="{StaticResource SectionTitle}" Margin="0,16,0,6" />
                             <TextBlock Style="{StaticResource MutedText}" TextWrapping="Wrap"
-                                       Text="Поддерживаются JPG, PNG, BMP и WebP. Обрезка выполняется после поворота и отражения, но до изменения размера. Водяной знак рисуется после изменения размера. Для JPEG метаданные переносятся с исправленной ориентацией." />
+                                       Text="Поддерживаются JPG, PNG, BMP и WebP. Обрезка и хромакей выполняются после поворота и отражения, но до изменения размера. Водяной знак рисуется после изменения размера. Для JPEG метаданные переносятся с исправленной ориентацией." />
                             <Border Height="16" Background="Transparent" />
                         </StackPanel>
                     </ScrollViewer>

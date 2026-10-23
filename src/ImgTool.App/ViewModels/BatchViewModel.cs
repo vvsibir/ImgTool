@@ -52,6 +52,13 @@ public sealed class BatchViewModel : BindableBase
     private bool _flipHorizontal;
     private bool _flipVertical;
 
+    private bool _chromaKeyEnabled;
+    private string _chromaKeyColor = "#00FF00";
+    private double _chromaKeyTolerance = 35;
+    private double _chromaKeySoftness = 8;
+    private bool _chromaKeyDespill = true;
+    private string _chromaKeyBackground = "#FFFFFF";
+
     private bool _watermarkEnabled;
     private WatermarkKind _watermarkKind = WatermarkKind.Text;
     private string _watermarkText = "imgTool";
@@ -429,6 +436,42 @@ public sealed class BatchViewModel : BindableBase
         set => Set(ref _flipVertical, value);
     }
 
+    public bool ChromaKeyEnabled
+    {
+        get => _chromaKeyEnabled;
+        set => Set(ref _chromaKeyEnabled, value);
+    }
+
+    public string ChromaKeyColor
+    {
+        get => _chromaKeyColor;
+        set => Set(ref _chromaKeyColor, value);
+    }
+
+    public double ChromaKeyTolerance
+    {
+        get => _chromaKeyTolerance;
+        set => Set(ref _chromaKeyTolerance, Math.Clamp(value, 0, 100));
+    }
+
+    public double ChromaKeySoftness
+    {
+        get => _chromaKeySoftness;
+        set => Set(ref _chromaKeySoftness, Math.Clamp(value, 0, 100));
+    }
+
+    public bool ChromaKeyDespill
+    {
+        get => _chromaKeyDespill;
+        set => Set(ref _chromaKeyDespill, value);
+    }
+
+    public string ChromaKeyBackground
+    {
+        get => _chromaKeyBackground;
+        set => Set(ref _chromaKeyBackground, value);
+    }
+
     public bool WatermarkEnabled
     {
         get => _watermarkEnabled;
@@ -781,6 +824,16 @@ public sealed class BatchViewModel : BindableBase
             return "Выберите файл логотипа для водяного знака.";
         }
 
+        if (ChromaKeyEnabled && !ColorParser.IsValid(ChromaKeyColor))
+        {
+            return "Укажите корректный цвет хромакея в формате HEX.";
+        }
+
+        if (ChromaKeyEnabled && !ColorParser.IsValid(ChromaKeyBackground))
+        {
+            return "Укажите корректный цвет фона для JPEG/BMP в формате HEX.";
+        }
+
         return null;
     }
 
@@ -815,6 +868,15 @@ public sealed class BatchViewModel : BindableBase
         RotationDegrees = RotationDegrees,
         FlipHorizontal = FlipHorizontal,
         FlipVertical = FlipVertical,
+        ChromaKey = new ChromaKeyOptions
+        {
+            Enabled = ChromaKeyEnabled,
+            KeyColorHex = ChromaKeyColor,
+            Tolerance = ChromaKeyTolerance,
+            Softness = ChromaKeySoftness,
+            Despill = ChromaKeyDespill,
+            BackgroundHex = ChromaKeyBackground
+        },
         Watermark = new WatermarkOptions
         {
             Enabled = WatermarkEnabled,
