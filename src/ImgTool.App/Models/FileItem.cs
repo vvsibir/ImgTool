@@ -76,8 +76,12 @@ public sealed class FileItem : BindableBase
             : $"{value:0.#} {units[unit]}";
     }
 
-    public static IReadOnlyList<string> ExpandPaths(IEnumerable<string> paths, bool recursive = false)
+    public static IReadOnlyList<string> ExpandPaths(
+        IEnumerable<string> paths,
+        bool recursive = false,
+        Func<string, bool>? predicate = null)
     {
+        predicate ??= ImageFormatHelper.IsSupportedSource;
         var result = new List<string>();
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -85,7 +89,7 @@ public sealed class FileItem : BindableBase
         {
             if (Directory.Exists(path))
             {
-                foreach (string file in FileCollector.FromFolder(path, recursive))
+                foreach (string file in FileCollector.FromFolder(path, recursive, predicate))
                 {
                     if (seen.Add(file))
                     {
@@ -93,7 +97,7 @@ public sealed class FileItem : BindableBase
                     }
                 }
             }
-            else if (File.Exists(path) && ImageFormatHelper.IsSupportedSource(path))
+            else if (File.Exists(path) && predicate(path))
             {
                 string full = IOPath.GetFullPath(path);
                 if (seen.Add(full))

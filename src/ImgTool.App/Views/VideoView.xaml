@@ -1,0 +1,120 @@
+<UserControl x:Class="ImgTool.App.Views.VideoView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="clr-namespace:ImgTool.Core.Models;assembly=ImgTool.Core"
+             xmlns:svc="clr-namespace:ImgTool.Core.Services;assembly=ImgTool.Core"
+             xmlns:vm="clr-namespace:ImgTool.App.ViewModels"
+             mc:Ignorable="d"
+             d:DesignHeight="800" d:DesignWidth="1100"
+             AllowDrop="True"
+             Drop="OnDrop">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+        <ObjectDataProvider x:Key="FormatValues" MethodName="GetValues" ObjectType="{x:Type models:ImageFormatKind}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="models:ImageFormatKind" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+    </UserControl.Resources>
+    <Grid Margin="24">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="360" />
+            <ColumnDefinition Width="16" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Style="{StaticResource Card}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock Text="Источник" Style="{StaticResource CardTitle}" />
+                    <TextBlock Text="MP4, MKV, AVI, MOV" Foreground="{StaticResource MutedBrush}" />
+
+                    <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                        <Button Content="Добавить файл" Command="{Binding AddFileCommand}" />
+                        <Button Content="Папка" Command="{Binding AddFolderCommand}" Margin="8,0,0,0" />
+                    </StackPanel>
+
+                    <TextBlock Text="Файл" Style="{StaticResource FieldLabel}" Margin="0,16,0,6" />
+                    <TextBlock Text="{Binding SourcePath}" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" />
+
+                    <TextBlock Text="Информация" Style="{StaticResource FieldLabel}" Margin="0,16,0,6" />
+                    <TextBlock Text="{Binding InfoText}" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" />
+
+                    <TextBlock Text="Папка сохранения" Style="{StaticResource FieldLabel}" Margin="0,16,0,6" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Text="{Binding OutputDirectory, UpdateSourceTrigger=PropertyChanged}" />
+                        <Button Grid.Column="1" Content="Обзор..." Command="{Binding BrowseOutputCommand}" Margin="8,0,0,0" />
+                    </Grid>
+
+                    <TextBlock Text="Шаблон имени" Style="{StaticResource FieldLabel}" Margin="0,12,0,6" />
+                    <TextBox Text="{Binding FileNamePattern, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock Text="{Binding FileNamePattern}" Foreground="{StaticResource MutedBrush}" FontSize="11" Visibility="Collapsed" />
+                    <TextBlock Text="Подстановки: {name}, {index}, {ext}, {date}, {width}, {height}" Foreground="{StaticResource MutedBrush}" FontSize="11" />
+
+                    <TextBlock Text="Формат кадров" Style="{StaticResource FieldLabel}" Margin="0,12,0,6" />
+                    <ComboBox ItemsSource="{Binding Source={StaticResource FormatValues}}" SelectedItem="{Binding Format}" />
+
+                    <TextBlock Text="Качество (JPEG/WebP)" Style="{StaticResource FieldLabel}" Margin="0,12,0,6" />
+                    <Slider Minimum="1" Maximum="100" Value="{Binding Quality}" TickFrequency="1" IsSnapToTickEnabled="True" />
+                    <TextBlock Text="{Binding Quality, StringFormat='{}{0}%'}" HorizontalAlignment="Right" Foreground="{StaticResource MutedBrush}" FontSize="11" />
+
+                    <TextBlock Text="Политика при совпадении" Style="{StaticResource FieldLabel}" Margin="0,12,0,6" />
+                    <ComboBox SelectedItem="{Binding CollisionPolicy}" />
+
+                    <TextBlock Text="Интервал, секунды" Style="{StaticResource FieldLabel}" Margin="0,16,0,6" />
+                    <TextBox Text="{Binding FrameIntervalSeconds, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <CheckBox Content="Брать каждый N-й кадр" IsChecked="{Binding TakeEveryFrame}" Margin="0,12,0,0" />
+                    <TextBlock Text="N" Style="{StaticResource FieldLabel}" Margin="0,8,0,6" />
+                    <TextBox Text="{Binding EveryNthFrame, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding TakeEveryFrame}" />
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Border Grid.Column="2" Style="{StaticResource Card}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel>
+                    <TextBlock Text="Извлечение кадров" Style="{StaticResource CardTitle}" />
+                    <TextBlock Text="Сохранение кадров в выбранном формате" Foreground="{StaticResource MutedBrush}" />
+                </StackPanel>
+
+                <Border Grid.Row="1" Margin="0,16,0,0" Background="{StaticResource SurfaceAltBrush}" CornerRadius="10" Padding="16">
+                    <Grid>
+                        <TextBlock Text="Перетащите MP4-файл в это окно или добавьте через панель слева." Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <TextBox Text="{Binding LogText}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" Background="Transparent" BorderThickness="0" Foreground="{StaticResource TextBrush}" />
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+
+                <StackPanel Grid.Row="2" Margin="0,16,0,0">
+                    <Grid Visibility="{Binding IsExtracting, Converter={StaticResource BoolToVisibility}}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="{Binding ProgressText}" Foreground="{StaticResource MutedBrush}" FontSize="11" />
+                        <ProgressBar Grid.Row="1" Height="6" Margin="0,6,0,0" Minimum="0" Maximum="{Binding ProgressTotal}" Value="{Binding ProgressCurrent}" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                        <Button Content="Очистить лог" Command="{Binding ClearLogCommand}" />
+                        <Button Content="Отменить" Command="{Binding CancelCommand}" Margin="8,0,0,0" />
+                        <Button Content="Извлечь кадры" Command="{Binding ExtractCommand}" Style="{StaticResource AccentButton}" Margin="8,0,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

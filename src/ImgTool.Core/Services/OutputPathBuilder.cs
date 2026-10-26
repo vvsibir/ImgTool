@@ -17,15 +17,38 @@ public static class OutputPathBuilder
         int index,
         ImageFormatKind format,
         int width,
+        int height) =>
+        Build(
+            sourcePath,
+            options.OutputDirectory,
+            options.FileNamePattern,
+            options.CollisionPolicy,
+            index,
+            format,
+            width,
+            height);
+
+    /// <summary>
+    /// Формирует путь по явно заданным папке, шаблону и политике совпадений.
+    /// Возвращает <c>null</c>, если файл нужно пропустить из-за коллизии.
+    /// </summary>
+    public static string? Build(
+        string sourcePath,
+        string outputDirectory,
+        string fileNamePattern,
+        CollisionPolicy collisionPolicy,
+        int index,
+        ImageFormatKind format,
+        int width,
         int height)
     {
-        string directory = string.IsNullOrWhiteSpace(options.OutputDirectory)
+        string directory = string.IsNullOrWhiteSpace(outputDirectory)
             ? Path.GetDirectoryName(sourcePath) ?? Environment.CurrentDirectory
-            : Environment.ExpandEnvironmentVariables(options.OutputDirectory.Trim());
+            : Environment.ExpandEnvironmentVariables(outputDirectory.Trim());
 
-        string pattern = string.IsNullOrWhiteSpace(options.FileNamePattern)
+        string pattern = string.IsNullOrWhiteSpace(fileNamePattern)
             ? "{name}"
-            : options.FileNamePattern.Trim();
+            : fileNamePattern.Trim();
 
         string extension = ImageFormatHelper.GetExtension(format);
         string sourceName = Path.GetFileNameWithoutExtension(sourcePath);
@@ -58,7 +81,7 @@ public static class OutputPathBuilder
             return candidate;
         }
 
-        switch (options.CollisionPolicy)
+        switch (collisionPolicy)
         {
             case CollisionPolicy.Overwrite:
                 return candidate;

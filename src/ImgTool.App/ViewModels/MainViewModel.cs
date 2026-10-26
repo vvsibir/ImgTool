@@ -7,7 +7,11 @@ public enum AppSection
 {
     Batch,
     Collage,
-    Metadata
+    Metadata,
+
+    // Новые значения добавлены в конец, чтобы не менять номера в сохранённых настройках.
+    Gif,
+    Video
 }
 
 /// <summary>Корневая ViewModel приложения.</summary>
@@ -28,6 +32,10 @@ public sealed class MainViewModel : BindableBase
 
     public BatchViewModel Batch { get; } = new();
 
+    public GifViewModel Gif { get; } = new();
+
+    public VideoViewModel Video { get; } = new();
+
     public CollageViewModel Collage { get; } = new();
 
     public MetadataViewModel Metadata { get; } = new();
@@ -46,6 +54,8 @@ public sealed class MainViewModel : BindableBase
 
             RaisePropertyChanged(
                 nameof(IsBatchSection),
+                nameof(IsGifSection),
+                nameof(IsVideoSection),
                 nameof(IsCollageSection),
                 nameof(IsMetadataSection),
                 nameof(SectionTitle),
@@ -55,12 +65,18 @@ public sealed class MainViewModel : BindableBase
 
     public bool IsBatchSection => ActiveSection == AppSection.Batch;
 
+    public bool IsGifSection => ActiveSection == AppSection.Gif;
+
+    public bool IsVideoSection => ActiveSection == AppSection.Video;
+
     public bool IsCollageSection => ActiveSection == AppSection.Collage;
 
     public bool IsMetadataSection => ActiveSection == AppSection.Metadata;
 
     public string SectionTitle => ActiveSection switch
     {
+        AppSection.Gif => "GIF → кадры",
+        AppSection.Video => "MP4 → кадры",
         AppSection.Collage => "Коллаж",
         AppSection.Metadata => "Метаданные",
         _ => "Пакетная обработка"
@@ -68,6 +84,8 @@ public sealed class MainViewModel : BindableBase
 
     public string SectionSubtitle => ActiveSection switch
     {
+        AppSection.Gif => "Извлеките все кадры анимированного GIF в отдельные изображения",
+        AppSection.Video => "Извлеките кадры видео в PNG или другой формат",
         AppSection.Collage => "Соберите несколько изображений в единую сетку",
         AppSection.Metadata => "EXIF, очистка и переименование по дате съёмки",
         _ => "Ресайз, обрезка, поворот, конвертация и водяные знаки"
@@ -78,6 +96,8 @@ public sealed class MainViewModel : BindableBase
     public void Shutdown()
     {
         Batch.Shutdown();
+        Gif.Shutdown();
+        Video.Shutdown();
         Collage.Shutdown();
         Metadata.Shutdown();
     }

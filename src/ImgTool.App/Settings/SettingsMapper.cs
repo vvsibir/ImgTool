@@ -9,6 +9,8 @@ public static class SettingsMapper
     public static void Apply(MainViewModel viewModel, AppSettings settings)
     {
         Apply(viewModel.Batch, settings.Batch);
+        Apply(viewModel.Gif, settings.Gif);
+        Apply(viewModel.Video, settings.Video);
         Apply(viewModel.Collage, settings.Collage);
         Apply(viewModel.Metadata, settings.Metadata);
         viewModel.ActiveSection = EnumOr(settings.ActiveSection, AppSection.Batch);
@@ -18,6 +20,8 @@ public static class SettingsMapper
     {
         settings.ActiveSection = viewModel.ActiveSection;
         settings.Batch = Capture(viewModel.Batch);
+        settings.Gif = Capture(viewModel.Gif);
+        settings.Video = Capture(viewModel.Video);
         settings.Collage = Capture(viewModel.Collage);
         settings.Metadata = Capture(viewModel.Metadata);
     }
@@ -115,6 +119,40 @@ public static class SettingsMapper
         viewModel.RenamePattern = settings.RenamePattern ?? "{date}_{time}";
     }
 
+    public static void Apply(GifViewModel viewModel, GifSettings? settings)
+    {
+        if (settings is null)
+        {
+            return;
+        }
+
+        viewModel.OutputDirectory = settings.OutputDirectory ?? string.Empty;
+        viewModel.FileNamePattern = settings.FileNamePattern ?? "{name}_frame_{index}";
+        ImageFormatKind format = EnumOr(settings.Format, ImageFormatKind.Png);
+        viewModel.Format = format == ImageFormatKind.Keep ? ImageFormatKind.Png : format;
+        viewModel.Quality = settings.Quality;
+        viewModel.CollisionPolicy = EnumOr(settings.CollisionPolicy, CollisionPolicy.Rename);
+        viewModel.RecursiveFolders = settings.RecursiveFolders;
+    }
+
+    public static void Apply(VideoViewModel viewModel, VideoSettings? settings)
+    {
+        if (settings is null)
+        {
+            return;
+        }
+
+        viewModel.OutputDirectory = settings.OutputDirectory ?? string.Empty;
+        viewModel.FileNamePattern = settings.FileNamePattern ?? "{name}_frame_{index}";
+        ImageFormatKind format = EnumOr(settings.Format, ImageFormatKind.Png);
+        viewModel.Format = format == ImageFormatKind.Keep ? ImageFormatKind.Png : format;
+        viewModel.Quality = settings.Quality;
+        viewModel.CollisionPolicy = EnumOr(settings.CollisionPolicy, CollisionPolicy.Rename);
+        viewModel.FrameIntervalSeconds = settings.FrameIntervalSeconds > 0 ? settings.FrameIntervalSeconds : 1.0;
+        viewModel.TakeEveryFrame = settings.TakeEveryFrame;
+        viewModel.EveryNthFrame = settings.EveryNthFrame > 0 ? settings.EveryNthFrame : 1;
+    }
+
     public static BatchSettings Capture(BatchViewModel viewModel) => new()
     {
         OutputDirectory = viewModel.OutputDirectory,
@@ -186,6 +224,28 @@ public static class SettingsMapper
     public static MetadataSettings Capture(MetadataViewModel viewModel) => new()
     {
         RenamePattern = viewModel.RenamePattern
+    };
+
+    public static GifSettings Capture(GifViewModel viewModel) => new()
+    {
+        OutputDirectory = viewModel.OutputDirectory,
+        FileNamePattern = viewModel.FileNamePattern,
+        Format = viewModel.Format,
+        Quality = viewModel.Quality,
+        CollisionPolicy = viewModel.CollisionPolicy,
+        RecursiveFolders = viewModel.RecursiveFolders
+    };
+
+    public static VideoSettings Capture(VideoViewModel viewModel) => new()
+    {
+        OutputDirectory = viewModel.OutputDirectory,
+        FileNamePattern = viewModel.FileNamePattern,
+        Format = viewModel.Format,
+        Quality = viewModel.Quality,
+        CollisionPolicy = viewModel.CollisionPolicy,
+        FrameIntervalSeconds = viewModel.FrameIntervalSeconds,
+        TakeEveryFrame = viewModel.TakeEveryFrame,
+        EveryNthFrame = viewModel.EveryNthFrame
     };
 
     private static T EnumOr<T>(T value, T fallback) where T : struct, Enum =>

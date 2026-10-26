@@ -17,6 +17,10 @@ public sealed class AppSettings
     public CollageSettings Collage { get; set; } = new();
 
     public MetadataSettings Metadata { get; set; } = new();
+
+    public GifSettings Gif { get; set; } = new();
+
+    public VideoSettings Video { get; set; } = new();
 }
 
 /// <summary>Положение и размер главного окна.</summary>
@@ -166,4 +170,40 @@ public sealed class CollageSettings
 public sealed class MetadataSettings
 {
     public string RenamePattern { get; set; } = "{date}_{time}";
+}
+
+/// <summary>Настройки извлечения кадров из GIF.</summary>
+public sealed class GifSettings
+{
+    public string OutputDirectory { get; set; } = string.Empty;
+
+    public string FileNamePattern { get; set; } = "{name}_frame_{index}";
+
+    public ImageFormatKind Format { get; set; } = ImageFormatKind.Png;
+
+    public int Quality { get; set; } = 92;
+
+    public CollisionPolicy CollisionPolicy { get; set; } = CollisionPolicy.Rename;
+
+    public bool RecursiveFolders { get; set; }
+}
+
+/// <summary>Настройки извлечения кадров из видео.</summary>
+public sealed class VideoSettings
+{
+    public string OutputDirectory { get; set; } = string.Empty;
+
+    public string FileNamePattern { get; set; } = "{name}_frame_{index}";
+
+    public ImageFormatKind Format { get; set; } = ImageFormatKind.Png;
+
+    public int Quality { get; set; } = 90;
+
+    public CollisionPolicy CollisionPolicy { get; set; } = CollisionPolicy.Rename;
+
+    public double FrameIntervalSeconds { get; set; } = 1.0;
+
+    public bool TakeEveryFrame { get; set; }
+
+    public int EveryNthFrame { get; set; } = 1;
 }

@@ -115,6 +115,32 @@
 
                             <RadioButton Style="{StaticResource NavButton}"
                                          GroupName="Sections"
+                                         IsChecked="{Binding IsGifSection, Mode=OneWay}"
+                                         Command="{Binding SelectSectionCommand}"
+                                         CommandParameter="Gif">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="26" Height="26" CornerRadius="7" Background="#1A2438" Margin="0,0,10,0">
+                                        <TextBlock Text="▶" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock Text="GIF → кадры" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </RadioButton>
+
+                            <RadioButton Style="{StaticResource NavButton}"
+                                         GroupName="Sections"
+                                         IsChecked="{Binding IsVideoSection, Mode=OneWay}"
+                                         Command="{Binding SelectSectionCommand}"
+                                         CommandParameter="Video">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="26" Height="26" CornerRadius="7" Background="#1A2438" Margin="0,0,10,0">
+                                        <TextBlock Text="▣" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock Text="MP4 → кадры" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </RadioButton>
+
+                            <RadioButton Style="{StaticResource NavButton}"
+                                         GroupName="Sections"
                                          IsChecked="{Binding IsCollageSection, Mode=OneWay}"
                                          Command="{Binding SelectSectionCommand}"
                                          CommandParameter="Collage">
@@ -147,6 +173,8 @@
                                 <TextBlock Text="Поддерживаемые форматы" Style="{StaticResource MutedText}"
                                            FontSize="10.5" Margin="0,0,0,4" />
                                 <TextBlock Text="JPG · PNG · BMP · WebP" FontSize="12" FontWeight="SemiBold" />
+                                <TextBlock Text="GIF · MP4 → кадры" Foreground="{StaticResource AccentBrush}"
+                                           FontSize="11.5" FontWeight="SemiBold" Margin="0,3,0,0" />
                                 <TextBlock Text="{Binding VersionText}" Style="{StaticResource MutedText}"
                                            FontSize="10.5" Margin="0,8,0,0" />
                             </StackPanel>
@@ -158,6 +186,10 @@
                 <Grid Grid.Column="1" Margin="22,18,22,18">
                     <views:BatchView DataContext="{Binding Batch}"
                                      Visibility="{Binding DataContext.IsBatchSection, RelativeSource={RelativeSource AncestorType={x:Type Window}}, Converter={StaticResource BoolToVis}}" />
+                    <views:GifView DataContext="{Binding Gif}"
+                                   Visibility="{Binding DataContext.IsGifSection, RelativeSource={RelativeSource AncestorType={x:Type Window}}, Converter={StaticResource BoolToVis}}" />
+                    <views:VideoView DataContext="{Binding Video}"
+                                     Visibility="{Binding DataContext.IsVideoSection, RelativeSource={RelativeSource AncestorType={x:Type Window}}, Converter={StaticResource BoolToVis}}" />
                     <views:CollageView DataContext="{Binding Collage}"
                                        Visibility="{Binding DataContext.IsCollageSection, RelativeSource={RelativeSource AncestorType={x:Type Window}}, Converter={StaticResource BoolToVis}}" />
                     <views:MetadataView DataContext="{Binding Metadata}"

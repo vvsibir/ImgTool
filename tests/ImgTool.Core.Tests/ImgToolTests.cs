@@ -148,6 +148,112 @@ public sealed class ChromaKeyTests
     }
 }
 
+public sealed class GifFrameExtractorTests
+{
+    private const string SimpleGifBase64 =
+        "R0lGODlhBAAEAHAAACH5BAEAAAEALAAAAAAEAAQAgf8AAAAAAAAAAAAAAAIEhI8JBQAh+QQBAAABACwAAAAABAAEAIEAAP8AAAAAAAAAAAACBISPCQUAOw==";
+
+    private static string WriteGif(TempDirectory temp, string name, string base64)
+    {
+        string path = Path.Combine(temp.Path, name);
+        byte[] bytes = Convert.FromBase64String(base64);
+        File.WriteAllBytes(path, bytes);
+        return path;
+    }
+
+    [Fact]
+    public void Extract_SimpleGif_ExtractsAllFrames()
+    {
+        using var temp = new TempDirectory();
+        string source = WriteGif(temp, "anim.gif", SimpleGifBase64);
+
+        var options = new GifExtractionOptions
+        {
+            OutputDirectory = temp.Path,
+            FileNamePattern = "{name}_f{index}",
+            Format = ImageFormatKind.Png,
+            CollisionPolicy = CollisionPolicy.Overwrite
+        };
+
+        GifExtractionResult result = GifFrameExtractor.Extract(source, options);
+
+        Assert.True(result.Success);
+        Assert.Equal(2, result.FrameCount);
+        Assert.Equal(2, result.SavedCount);
+        Assert.True(File.Exists(result.Frames[0].OutputPath!));
+        Assert.True(File.Exists(result.Frames[1].OutputPath!));
+        Assert.EndsWith("_f001.png", result.Frames[0].OutputPath);
+        Assert.EndsWith("_f002.png", result.Frames[1].OutputPath);
+
+        using SKBitmap first = SkiaImage.LoadOriented(result.Frames[0].OutputPath!);
+        using SKBitmap second = SkiaImage.LoadOriented(result.Frames[1].OutputPath!);
+        Assert.Equal(4, first.Width);
+        Assert.Equal(4, first.Height);
+        Assert.Equal(SKColors.Red, first.GetPixel(0, 0));
+        Assert.Equal(SKColors.Blue, second.GetPixel(0, 0));
+    }
+
+    [Fact]
+    public void Extract_JpegFlattensOnWhite()
+    {
+        using var temp = new TempDirectory();
+        string source = WriteGif(temp, "anim.gif", SimpleGifBase64);
+
+        var options = new GifExtractionOptions
+        {
+            OutputDirectory = temp.Path,
+            FileNamePattern = "{name}_f{index}",
+            Format = ImageFormatKind.Jpeg,
+            CollisionPolicy = CollisionPolicy.Overwrite
+        };
+
+        GifExtractionResult result = GifFrameExtractor.Extract(source, options);
+
+        Assert.True(result.Success);
+        Assert.All(result.Frames, frame => Assert.EndsWith(".jpg", frame.OutputPath));
+        using SKBitmap output = SkiaImage.LoadOriented(result.Frames[0].OutputPath!);
+        Assert.Equal(4, output.Width);
+        Assert.Equal(4, output.Height);
+    }
+
+    [Fact]
+    public void Extract_CollisionSkip_SkipsFrame()
+    {
+        using var temp = new TempDirectory();
+        string source = WriteGif(temp, "anim.gif", SimpleGifBase64);
+        string existing = Path.Combine(temp.Path, "anim_f001.png");
+        File.WriteAllText(existing, "x");
+
+        var options = new GifExtractionOptions
+        {
+            OutputDirectory = temp.Path,
+            FileNamePattern = "{name}_f{index}",
+            Format = ImageFormatKind.Png,
+            CollisionPolicy = CollisionPolicy.Skip
+        };
+
+        GifExtractionResult result = GifFrameExtractor.Extract(source, options);
+
+        Assert.Equal(1, result.SavedCount);
+        Assert.Equal(1, result.SkippedCount);
+        Assert.True(result.Frames[0].Skipped);
+        Assert.True(result.Frames[1].Success);
+    }
+
+    [Fact]
+    public void ReadInfo_ReturnsFrameCount()
+    {
+        using var temp = new TempDirectory();
+        string source = WriteGif(temp, "anim.gif", SimpleGifBase64);
+
+        GifSourceInfo info = GifFrameExtractor.ReadInfo(source);
+
+        Assert.Equal(4, info.Width);
+        Assert.Equal(4, info.Height);
+        Assert.Equal(2, info.FrameCount);
+    }
+}
+
 public sealed class ImageProcessorTests
 {
     private static SKBitmap CreateBitmap(int width, int height, SKColor color)

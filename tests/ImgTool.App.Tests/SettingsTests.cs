@@ -70,6 +70,15 @@ public sealed class SettingsTests
             Metadata = new MetadataSettings
             {
                 RenamePattern = "{date}-{time}"
+            },
+            Gif = new GifSettings
+            {
+                OutputDirectory = Path.Combine(temp.Path, "gif-out"),
+                FileNamePattern = "{name}_frame_{index:000}",
+                Format = ImageFormatKind.WebP,
+                Quality = 84,
+                CollisionPolicy = CollisionPolicy.Overwrite,
+                RecursiveFolders = true
             }
         };
 
@@ -116,6 +125,12 @@ public sealed class SettingsTests
         Assert.True(actual.Collage.TransparentBackground);
         Assert.Equal(expected.Collage.OutputPath, actual.Collage.OutputPath);
         Assert.Equal(expected.Metadata.RenamePattern, actual.Metadata.RenamePattern);
+        Assert.Equal(expected.Gif.OutputDirectory, actual.Gif.OutputDirectory);
+        Assert.Equal(expected.Gif.FileNamePattern, actual.Gif.FileNamePattern);
+        Assert.Equal(expected.Gif.Format, actual.Gif.Format);
+        Assert.Equal(expected.Gif.Quality, actual.Gif.Quality);
+        Assert.Equal(expected.Gif.CollisionPolicy, actual.Gif.CollisionPolicy);
+        Assert.True(actual.Gif.RecursiveFolders);
     }
 
     [Fact]
@@ -177,6 +192,12 @@ public sealed class SettingsTests
         original.Collage.TransparentBackground = true;
         original.Collage.Format = ImageFormatKind.Png;
         original.Metadata.RenamePattern = "{name}";
+        original.Gif.OutputDirectory = @"C:\gif-out";
+        original.Gif.FileNamePattern = "{name}_frame";
+        original.Gif.Format = ImageFormatKind.Jpeg;
+        original.Gif.Quality = 76;
+        original.Gif.CollisionPolicy = CollisionPolicy.Skip;
+        original.Gif.RecursiveFolders = true;
 
         var settings = new AppSettings();
         SettingsMapper.Capture(original, settings);
@@ -217,6 +238,12 @@ public sealed class SettingsTests
         Assert.Equal(original.Collage.BackgroundHex, restored.Collage.BackgroundHex);
         Assert.True(restored.Collage.TransparentBackground);
         Assert.Equal(original.Metadata.RenamePattern, restored.Metadata.RenamePattern);
+        Assert.Equal(original.Gif.OutputDirectory, restored.Gif.OutputDirectory);
+        Assert.Equal(original.Gif.FileNamePattern, restored.Gif.FileNamePattern);
+        Assert.Equal(original.Gif.Format, restored.Gif.Format);
+        Assert.Equal(original.Gif.Quality, restored.Gif.Quality);
+        Assert.Equal(original.Gif.CollisionPolicy, restored.Gif.CollisionPolicy);
+        Assert.True(restored.Gif.RecursiveFolders);
     }
 
     [Fact]
@@ -226,7 +253,8 @@ public sealed class SettingsTests
         {
             ActiveSection = (AppSection)999,
             Batch = new BatchSettings { Format = (ImageFormatKind)999, ResizeMode = (ResizeMode)999 },
-            Collage = new CollageSettings { Layout = (CollageLayout)999, Format = (ImageFormatKind)999 }
+            Collage = new CollageSettings { Layout = (CollageLayout)999, Format = (ImageFormatKind)999 },
+            Gif = new GifSettings { Format = (ImageFormatKind)999, CollisionPolicy = (CollisionPolicy)999 }
         };
 
         var viewModel = new MainViewModel();
@@ -237,6 +265,8 @@ public sealed class SettingsTests
         Assert.Equal(ResizeMode.Fit, viewModel.Batch.ResizeMode);
         Assert.Equal(CollageLayout.Grid, viewModel.Collage.Layout);
         Assert.Equal(ImageFormatKind.Jpeg, viewModel.Collage.Format);
+        Assert.Equal(ImageFormatKind.Png, viewModel.Gif.Format);
+        Assert.Equal(CollisionPolicy.Rename, viewModel.Gif.CollisionPolicy);
     }
 
     private sealed class TempDirectory : IDisposable
