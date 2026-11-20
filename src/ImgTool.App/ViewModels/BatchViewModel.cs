@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using ImgTool.App.Infrastructure;
 using ImgTool.App.Models;
@@ -58,6 +59,7 @@ public sealed class BatchViewModel : BindableBase
     private double _chromaKeySoftness = 8;
     private bool _chromaKeyDespill = true;
     private string _chromaKeyBackground = "#FFFFFF";
+    private bool _isPickingChromaKeyColor;
 
     private bool _watermarkEnabled;
     private WatermarkKind _watermarkKind = WatermarkKind.Text;
@@ -83,6 +85,7 @@ public sealed class BatchViewModel : BindableBase
         BrowseOutputCommand = new RelayCommand(BrowseOutput);
         BrowseLogoCommand = new RelayCommand(BrowseLogo);
         OpenOutputFolderCommand = new RelayCommand(OpenOutputFolder);
+        TogglePickChromaKeyColorCommand = new RelayCommand(TogglePickChromaKeyColor);
         RunCommand = new AsyncRelayCommand(RunAsync, () => !IsBusy && Files.Count > 0);
         CancelCommand = new RelayCommand(Cancel, () => IsBusy && _cancellation is not null);
 
@@ -110,6 +113,8 @@ public sealed class BatchViewModel : BindableBase
     public RelayCommand BrowseLogoCommand { get; }
 
     public RelayCommand OpenOutputFolderCommand { get; }
+
+    public RelayCommand TogglePickChromaKeyColorCommand { get; }
 
     public AsyncRelayCommand RunCommand { get; }
 
@@ -470,6 +475,33 @@ public sealed class BatchViewModel : BindableBase
     {
         get => _chromaKeyBackground;
         set => Set(ref _chromaKeyBackground, value);
+    }
+
+    public bool IsPickingChromaKeyColor
+    {
+        get => _isPickingChromaKeyColor;
+        set => Set(ref _isPickingChromaKeyColor, value);
+    }
+
+    private void TogglePickChromaKeyColor()
+    {
+        if (!ChromaKeyEnabled)
+        {
+            ChromaKeyEnabled = true;
+        }
+
+        IsPickingChromaKeyColor = !IsPickingChromaKeyColor;
+        if (IsPickingChromaKeyColor)
+        {
+            StatusText = "Кликните по области предпросмотра, чтобы выбрать цвет ключа.";
+        }
+    }
+
+    public void ApplyPickedChromaKeyColor(Color color)
+    {
+        ChromaKeyColor = $"#{color.R:X2}{color.G:X2}{color.B:X2}";
+        IsPickingChromaKeyColor = false;
+        StatusText = $"Цвет ключа выбран: {ChromaKeyColor}.";
     }
 
     public bool WatermarkEnabled

@@ -270,9 +270,26 @@
                                             Height="36"
                                             Margin="0,20,0,0"
                                             CornerRadius="8"
-                                            BorderBrush="{StaticResource BorderBrush}"
-                                            BorderThickness="1"
-                                            Background="{Binding ChromaKeyColor}" />
+                                            Background="{Binding ChromaKeyColor}"
+                                            Cursor="Hand"
+                                            ToolTip="Нажмите, чтобы выбрать цвет пипеткой из предпросмотра">
+                                        <Border.InputBindings>
+                                            <MouseBinding MouseAction="LeftClick"
+                                                          Command="{Binding TogglePickChromaKeyColorCommand}" />
+                                        </Border.InputBindings>
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                                                <Setter Property="BorderThickness" Value="1" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsPickingChromaKeyColor}" Value="True">
+                                                        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                        <Setter Property="BorderThickness" Value="2" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                    </Border>
                                 </Grid>
 
                                 <Grid Margin="0,12,0,0">
@@ -541,7 +558,22 @@
                             <TextBlock Grid.Row="0" Text="Предпросмотр" Style="{StaticResource CardTitle}" />
                             <Border Grid.Row="1" Background="#0C111B" CornerRadius="10" ClipToBounds="True">
                                 <Grid>
-                                    <Image Source="{Binding PreviewSource}" Stretch="Uniform" Margin="8" />
+                                    <Image x:Name="PreviewImage"
+                                           Source="{Binding PreviewSource}"
+                                           Stretch="Uniform"
+                                           Margin="8"
+                                           MouseLeftButtonDown="OnPreviewMouseDown">
+                                        <Image.Style>
+                                            <Style TargetType="Image">
+                                                <Setter Property="Cursor" Value="Arrow" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsPickingChromaKeyColor}" Value="True">
+                                                        <Setter Property="Cursor" Value="Cross" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Image.Style>
+                                    </Image>
                                     <TextBlock Text="Выберите изображение"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center">
